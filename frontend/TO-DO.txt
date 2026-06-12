@@ -1,0 +1,7 @@
+** ARREGLAR ORDENAMIENTO POR PRIORIDAD.
+El backend por ahora ordena en prioridad en base
+al orden alfabetico de las prioridades.
+Alta -> Baja -> Critica -> Media.
+
+** AGREGAR BUSQUEDA DE TAREAS
+Tanto en el backend como en el frontend
