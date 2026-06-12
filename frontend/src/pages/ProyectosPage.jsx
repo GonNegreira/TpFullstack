@@ -5,276 +5,451 @@ import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 
 import {
-  getProyectos,
-  deleteProyecto
+    getProyectos,
+    deleteProyecto
 } from "../api/proyectos.service";
 
 import { useAuth } from "../context/AuthContext";
 
 export default function ProyectosPage() {
 
-  const [proyectos, setProyectos] =
-    useState([]);
+    const [proyectos, setProyectos] =
+        useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+    const [loading, setLoading] =
+        useState(true);
 
-  const { user } = useAuth();
+    const { user } =
+        useAuth();
 
-  useEffect(() => {
+    useEffect(() => {
 
-    loadProyectos();
+        loadProyectos();
 
-  }, []);
+    }, []);
 
-  async function loadProyectos() {
+    async function loadProyectos() {
 
-    try {
+        try {
 
-      setLoading(true);
+            setLoading(true);
 
-      const response =
-        await getProyectos();
+            const response =
+                await getProyectos();
 
-      setProyectos(
-        response.data
-      );
+            setProyectos(
+                response.data
+            );
 
-    } catch (error) {
+        } catch (error) {
 
-      console.error(error);
+            console.error(error);
 
-      alert(
-        "Error al cargar proyectos"
-      );
+            alert(
+                "Error al cargar proyectos"
+            );
 
-    } finally {
+        } finally {
 
-      setLoading(false);
+            setLoading(false);
+
+        }
 
     }
 
-  }
+    async function handleDelete(id) {
 
-  async function handleDelete(id) {
+        const confirmar =
+            window.confirm(
+                "¿Está seguro que desea eliminar este proyecto?"
+            );
 
-    const confirmar =
-      window.confirm(
-        "¿Está seguro que desea eliminar este proyecto?"
-      );
+        if (!confirmar) return;
 
-    if (!confirmar) return;
+        try {
 
-    try {
+            await deleteProyecto(id);
 
-      await deleteProyecto(id);
+            await loadProyectos();
 
-      await loadProyectos();
+        } catch (error) {
 
-    } catch (error) {
+            alert(
+                error.response?.data?.error ||
+                "Error al eliminar proyecto"
+            );
 
-  console.error(error);
+        }
 
-  console.log(
-    "DELETE ERROR:",
-    error.response
-  );
+    }
 
-  alert(
-    JSON.stringify(
-      error.response?.data ||
-      error.message
-    )
-  );
+    function getEstadoColor(estado) {
 
-}
+        switch (estado) {
 
-  }
+            case "activo":
+                return "#22c55e";
 
-  return (
+            case "pausado":
+                return "#f59e0b";
 
-    <MainLayout>
+            case "finalizado":
+                return "#64748b";
 
-      <h1>
+            default:
+                return "#3b82f6";
 
-        Gestión de Proyectos
+        }
 
-      </h1>
+    }
 
-      <hr />
+    return (
 
-      {
+        <MainLayout>
 
-        user?.rol === "admin" && (
-
-          <Link
-            to="/proyectos/nuevo"
-          >
-
-            <button>
-
-              Crear Proyecto
-
-            </button>
-
-          </Link>
-
-        )
-
-      }
-
-      <br />
-      <br />
-
-      {
-
-        loading ? (
-
-          <p>
-
-            Cargando proyectos...
-
-          </p>
-
-        ) : (
-
-          proyectos.map(
-
-            proyecto => (
-
-              <div
-                key={proyecto.id}
+            <div
                 style={{
-                  border: "1px solid #ccc",
-                  padding: "10px",
-                  marginBottom: "15px"
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "30px"
                 }}
-              >
+            >
 
-                <h3>
+                <div>
 
-                  {proyecto.nombre}
+                    <h1
+                        style={{
+                            margin: 0,
+                            fontSize: "2rem"
+                        }}
+                    >
+                        📁 Proyectos
+                    </h1>
 
-                </h3>
+                    <p
+                        style={{
+                            color: "#64748b",
+                            marginTop: "5px"
+                        }}
+                    >
+                        Administración y seguimiento de proyectos
+                    </p>
 
-                <p>
-
-                  <strong>
-                    Código:
-                  </strong>
-
-                  {" "}
-
-                  {proyecto.codigo}
-
-                </p>
-
-                <p>
-
-                  <strong>
-                    Estado:
-                  </strong>
-
-                  {" "}
-
-                  {proyecto.estado}
-
-                </p>
-
-                <p>
-
-                  {proyecto.descripcion}
-
-                </p>
-
-                <p>
-
-                  <strong>
-                    Usuarios:
-                  </strong>
-
-                  {" "}
-
-                  {proyecto.Usuarios?.length || 0}
-
-                </p>
-
-                <p>
-
-                  <strong>
-                    Tareas:
-                  </strong>
-
-                  {" "}
-
-                  {proyecto.Tareas?.length || 0}
-
-                </p>
-
-                <Link
-                  to={`/proyectos/${proyecto.id}`}
-                >
-
-                  <button>
-
-                    Ver
-
-                  </button>
-
-                </Link>
-
-                {" "}
+                </div>
 
                 {
 
-                  user?.rol === "admin" && (
+                    user?.rol === "admin" && (
 
-                    <>
+                        <Link
+                            to="/proyectos/nuevo"
+                        >
 
-                      <Link
-                        to={`/proyectos/${proyecto.id}/editar`}
-                      >
+                            <button
+                                style={{
+                                    background:
+                                        "#2563eb",
+                                    color: "white",
+                                    border: "none",
+                                    padding:
+                                        "12px 18px",
+                                    borderRadius:
+                                        "8px",
+                                    cursor: "pointer",
+                                    fontWeight:
+                                        "bold"
+                                }}
+                            >
+                                ➕ Nuevo Proyecto
+                            </button>
 
-                        <button>
+                        </Link>
 
-                          Editar
-
-                        </button>
-
-                      </Link>
-
-                      {" "}
-
-                      <button
-                        onClick={() =>
-                          handleDelete(
-                            proyecto.id
-                          )
-                        }
-                      >
-
-                        Eliminar
-
-                      </button>
-
-                    </>
-
-                  )
+                    )
 
                 }
 
-              </div>
+            </div>
 
-            )
+            {
 
-          )
+                loading ? (
 
-        )
+                    <div
+                        style={{
+                            textAlign: "center",
+                            padding: "50px"
+                        }}
+                    >
+                        <h3>
+                            Cargando proyectos...
+                        </h3>
+                    </div>
 
-      }
+                ) : (
 
-    </MainLayout>
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                                "repeat(auto-fill, minmax(340px, 1fr))",
+                            gap: "20px"
+                        }}
+                    >
 
-  );
+                        {
+
+                            proyectos.map(
+                                proyecto => (
+
+                                    <div
+                                        key={
+                                            proyecto.id
+                                        }
+                                        style={{
+                                            background:
+                                                "#fff",
+                                            border:
+                                                "1px solid #e5e7eb",
+                                            borderRadius:
+                                                "12px",
+                                            padding:
+                                                "20px",
+                                            boxShadow:
+                                                "0 2px 8px rgba(0,0,0,0.06)",
+                                            display:
+                                                "flex",
+                                            flexDirection:
+                                                "column",
+                                            gap: "10px"
+                                        }}
+                                    >
+
+                                        <div
+                                            style={{
+                                                display:
+                                                    "flex",
+                                                justifyContent:
+                                                    "space-between",
+                                                alignItems:
+                                                    "center"
+                                            }}
+                                        >
+
+                                            <span
+                                                style={{
+                                                    fontSize:
+                                                        "0.8rem",
+                                                    color:
+                                                        "#64748b"
+                                                }}
+                                            >
+                                                {
+                                                    proyecto.codigo
+                                                }
+                                            </span>
+
+                                            <span
+                                                style={{
+                                                    background:
+                                                        getEstadoColor(
+                                                            proyecto.estado
+                                                        ),
+                                                    color:
+                                                        "white",
+                                                    padding:
+                                                        "4px 10px",
+                                                    borderRadius:
+                                                        "20px",
+                                                    fontSize:
+                                                        "0.8rem",
+                                                    fontWeight:
+                                                        "bold"
+                                                }}
+                                            >
+                                                {
+                                                    proyecto.estado
+                                                }
+                                            </span>
+
+                                        </div>
+
+                                        <h2
+                                            style={{
+                                                margin:
+                                                    "5px 0",
+                                                color:
+                                                    "#0f172a"
+                                            }}
+                                        >
+                                            {
+                                                proyecto.nombre
+                                            }
+                                        </h2>
+
+                                        <p
+                                            style={{
+                                                color:
+                                                    "#475569",
+                                                minHeight:
+                                                    "50px"
+                                            }}
+                                        >
+                                            {
+                                                proyecto.descripcion
+                                            }
+                                        </p>
+
+                                        <div
+                                            style={{
+                                                display:
+                                                    "flex",
+                                                gap: "20px",
+                                                fontSize:
+                                                    "0.95rem"
+                                            }}
+                                        >
+
+                                            <span>
+                                                👥{" "}
+                                                <strong>
+                                                    {
+                                                        proyecto.Usuarios?.length || 0
+                                                    }
+                                                </strong>
+                                            </span>
+
+                                            <span>
+                                                ✅{" "}
+                                                <strong>
+                                                    {
+                                                        proyecto.Tareas?.length || 0
+                                                    }
+                                                </strong>
+                                            </span>
+
+                                        </div>
+
+                                        <hr
+                                            style={{
+                                                border:
+                                                    "none",
+                                                borderTop:
+                                                    "1px solid #e5e7eb"
+                                            }}
+                                        />
+
+                                        <div
+                                            style={{
+                                                display:
+                                                    "flex",
+                                                gap: "10px",
+                                                flexWrap:
+                                                    "wrap"
+                                            }}
+                                        >
+
+                                            <Link
+                                                to={`/proyectos/${proyecto.id}`}
+                                            >
+
+                                                <button style={{
+                                                    background:
+                                                        "#2626dc",
+                                                    color:
+                                                        "white",
+                                                    border:
+                                                        "none",
+                                                    padding:
+                                                        "6px 12px",
+                                                    borderRadius:
+                                                        "6px",
+                                                    cursor:
+                                                        "pointer"
+                                                }}>
+                                                    Ver
+                                                </button>
+
+                                            </Link>
+
+                                            {
+
+                                                user?.rol === "admin" && (
+
+                                                    <>
+
+                                                        <Link
+                                                            to={`/proyectos/${proyecto.id}/editar`}
+                                                        >
+
+                                                            <button style={{
+                                                                background:
+                                                                    "#2626dc",
+                                                                color:
+                                                                    "white",
+                                                                border:
+                                                                    "none",
+                                                                padding:
+                                                                    "6px 12px",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                cursor:
+                                                                    "pointer"
+                                                            }}>
+                                                                Editar
+                                                            </button>
+
+                                                        </Link>
+
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    proyecto.id
+                                                                )
+                                                            }
+                                                            style={{
+                                                                background:
+                                                                    "#dc2626",
+                                                                color:
+                                                                    "white",
+                                                                border:
+                                                                    "none",
+                                                                padding:
+                                                                    "6px 12px",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                cursor:
+                                                                    "pointer"
+                                                            }}
+                                                        >
+                                                            Eliminar
+                                                        </button>
+
+                                                    </>
+
+                                                )
+
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                )
+
+                            )
+
+                        }
+
+                    </div>
+
+                )
+
+            }
+
+        </MainLayout>
+
+    );
 
 }

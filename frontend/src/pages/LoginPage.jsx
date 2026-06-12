@@ -1,75 +1,47 @@
-import {
-  useState
-} from "react";
+import { useState } from "react";
 
-import {
-  useNavigate
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import {
-  login
-} from "../api/auth.service";
-
-import { Link } from "react-router-dom";
-
-import {
-  useAuth
-} from "../context/AuthContext";
+import { useAuth }
+  from "../context/AuthContext";
 
 export default function LoginPage() {
 
   const navigate =
     useNavigate();
 
-  const {
-    loginUser
-  } = useAuth();
+  const { login } =
+    useAuth();
 
-  const [email,
-    setEmail] =
+  const [email, setEmail] =
     useState("");
 
-  const [password,
-    setPassword] =
+  const [password, setPassword] =
     useState("");
 
-  const [error,
-    setError] =
+  const [error, setError] =
     useState("");
 
-  async function handleSubmit(
-    e
-  ) {
+  async function handleSubmit(e) {
 
     e.preventDefault();
 
     try {
 
-      const response =
-        await login({
+      setError("");
 
-          email,
+      await login({
+        email,
+        password
+      });
 
-          password
+      navigate("/tareas");
 
-        });
-
-      loginUser(
-
-        response.data.usuario,
-
-        response.data.token
-
-      );
-
-      navigate(
-        "/tareas"
-      );
-
-    } catch {
+    } catch (err) {
 
       setError(
-        "Credenciales incorrectas"
+        err.response?.data?.error ||
+        "Error al iniciar sesión"
       );
 
     }
@@ -78,67 +50,178 @@ export default function LoginPage() {
 
   return (
 
-    <div>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background:
+          "linear-gradient(135deg, #2563eb, #1e40af)"
+      }}
+    >
 
-      <h1>
-        Login
-      </h1>
-
-      <form
-        onSubmit={
-          handleSubmit
-        }
+      <div
+        style={{
+          width: "400px",
+          backgroundColor: "#fff",
+          padding: "40px",
+          borderRadius: "16px",
+          boxShadow:
+            "0 10px 30px rgba(0,0,0,0.2)"
+        }}
       >
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e =>
-            setEmail(
-              e.target.value
-            )
-          }
-        />
-
-        <br />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e =>
-            setPassword(
-              e.target.value
-            )
-          }
-        />
-
-        <br />
-
-        <button
-          type="submit"
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: "10px",
+            color: "#1e3a8a"
+          }}
         >
-          Ingresar
-        </button>
+          TaskManager
+        </h1>
 
-      </form>
-
-      <p>
-        ¿No tenés cuenta?
-        {" "}
-        <Link to="/register">
-          Registrate
-        </Link>
-      </p>
-
-      {error && (
-
-        <p>
-          {error}
+        <p
+          style={{
+            textAlign: "center",
+            color: "#666",
+            marginBottom: "30px"
+          }}
+        >
+          Sistema de Gestión de Proyectos
         </p>
 
-      )}
+        <form
+          onSubmit={handleSubmit}
+        >
+
+          <div
+            style={{
+              marginBottom: "15px"
+            }}
+          >
+
+            <label>
+              Email
+            </label>
+
+            <input
+              type="email"
+              value={email}
+              onChange={(e) =>
+                setEmail(
+                  e.target.value
+                )
+              }
+              required
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginTop: "5px",
+                borderRadius: "8px",
+                border:
+                  "1px solid #ccc"
+              }}
+            />
+
+          </div>
+
+          <div
+            style={{
+              marginBottom: "20px"
+            }}
+          >
+
+            <label>
+              Contraseña
+            </label>
+
+            <input
+              type="password"
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
+              required
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginTop: "5px",
+                borderRadius: "8px",
+                border:
+                  "1px solid #ccc"
+              }}
+            />
+
+          </div>
+
+          {error && (
+
+            <div
+              style={{
+                color: "red",
+                marginBottom: "15px"
+              }}
+            >
+              {error}
+            </div>
+
+          )}
+
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: "12px",
+              border: "none",
+              borderRadius: "8px",
+              backgroundColor:
+                "#2563eb",
+              color: "white",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            Ingresar
+          </button>
+
+        </form>
+
+        <div
+          style={{
+            marginTop: "20px",
+            textAlign: "center"
+          }}
+        >
+
+          ¿No tenés cuenta?
+
+          <br />
+
+          <button
+            onClick={() =>
+              navigate(
+                "/register"
+              )
+            }
+            style={{
+              marginTop: "10px",
+              background: "none",
+              border: "none",
+              color: "#2563eb",
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            Registrarse
+          </button>
+
+        </div>
+
+      </div>
 
     </div>
 

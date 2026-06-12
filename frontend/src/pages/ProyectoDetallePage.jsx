@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 
 import MainLayout
-from "../layouts/MainLayout";
+  from "../layouts/MainLayout";
 
 import {
   getProyecto
@@ -34,9 +34,7 @@ export default function ProyectoDetallePage() {
     try {
 
       const response =
-        await getProyecto(
-          id
-        );
+        await getProyecto(id);
 
       setProyecto(
         response.data
@@ -44,9 +42,7 @@ export default function ProyectoDetallePage() {
 
     } catch (error) {
 
-      console.error(
-        error
-      );
+      console.error(error);
 
     }
 
@@ -58,9 +54,14 @@ export default function ProyectoDetallePage() {
 
       <MainLayout>
 
-        <p>
-          Cargando...
-        </p>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "50px"
+          }}
+        >
+          Cargando proyecto...
+        </div>
 
       </MainLayout>
 
@@ -68,131 +69,370 @@ export default function ProyectoDetallePage() {
 
   }
 
+  const estadoColor = {
+
+    activo:
+      "#16a34a",
+
+    pausado:
+      "#f59e0b",
+
+    finalizado:
+      "#6b7280"
+
+  };
+
   return (
 
     <MainLayout>
 
-      <h1>
+      {/* HEADER */}
 
-        {
-          proyecto.nombre
-        }
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: "18px",
+          padding: "30px",
+          border:
+            "1px solid #e5e7eb",
+          marginBottom: "25px",
+          boxShadow:
+            "0 2px 8px rgba(0,0,0,0.05)"
+        }}
+      >
 
-      </h1>
+        <div
+          style={{
+            display: "flex",
+            justifyContent:
+              "space-between",
+            alignItems:
+              "center",
+            flexWrap: "wrap",
+            gap: "10px"
+          }}
+        >
 
-      <p>
+          <div>
 
-        Código:
-        {" "}
-        {
-          proyecto.codigo
-        }
+            <h1
+              style={{
+                margin: 0
+              }}
+            >
+              📁 {proyecto.nombre}
+            </h1>
 
-      </p>
+            <p
+              style={{
+                marginTop: "8px",
+                color: "#6b7280"
+              }}
+            >
+              Código:
+              {" "}
+              <strong>
+                {proyecto.codigo}
+              </strong>
+            </p>
 
-      <p>
+          </div>
 
-        Estado:
-        {" "}
-        {
-          proyecto.estado
-        }
+          <span
+            style={{
+              backgroundColor:
+                estadoColor[
+                  proyecto.estado
+                ] || "#2563eb",
 
-      </p>
+              color: "white",
 
-      <p>
+              padding:
+                "8px 14px",
 
-        {
-          proyecto.descripcion
-        }
+              borderRadius:
+                "999px",
 
-      </p>
+              fontWeight:
+                "600",
 
-      <hr />
+              textTransform:
+                "capitalize"
+            }}
+          >
+            {proyecto.estado}
+          </span>
 
-      <h2>
+        </div>
 
-        Usuarios
+        <p
+          style={{
+            marginTop: "20px",
+            color: "#374151",
+            lineHeight: 1.7
+          }}
+        >
+          {proyecto.descripcion}
+        </p>
 
-      </h2>
+      </div>
 
-      <ul>
+      {/* RESUMEN */}
 
-        {
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit,minmax(220px,1fr))",
+          gap: "20px",
+          marginBottom: "30px"
+        }}
+      >
 
-          proyecto.Usuarios
-            ?.map(
+        <div
+          style={{
+            backgroundColor: "#fff",
+            border:
+              "1px solid #e5e7eb",
+            borderRadius: "16px",
+            padding: "20px"
+          }}
+        >
 
-              usuario => (
+          <div
+            style={{
+              color: "#6b7280"
+            }}
+          >
+            Usuarios asignados
+          </div>
 
-                <li
-                  key={
-                    usuario.id
-                  }
-                >
+          <div
+            style={{
+              fontSize: "2rem",
+              fontWeight: "700",
+              color: "#2563eb"
+            }}
+          >
+            {
+              proyecto
+                .Usuarios?.length || 0
+            }
+          </div>
 
-                  {
-                    usuario.nombre
-                  }
+        </div>
 
-                  {" - "}
+        <div
+          style={{
+            backgroundColor: "#fff",
+            border:
+              "1px solid #e5e7eb",
+            borderRadius: "16px",
+            padding: "20px"
+          }}
+        >
 
-                  {
-                    usuario.rol
-                  }
+          <div
+            style={{
+              color: "#6b7280"
+            }}
+          >
+            Tareas del proyecto
+          </div>
 
-                </li>
+          <div
+            style={{
+              fontSize: "2rem",
+              fontWeight: "700",
+              color: "#16a34a"
+            }}
+          >
+            {
+              proyecto
+                .Tareas?.length || 0
+            }
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* USUARIOS Y TAREAS */}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "1fr 2fr",
+          gap: "25px"
+        }}
+      >
+
+        {/* USUARIOS */}
+
+        <div
+          style={{
+            backgroundColor: "#fff",
+            border:
+              "1px solid #e5e7eb",
+            borderRadius: "18px",
+            padding: "25px"
+          }}
+        >
+
+          <h2
+            style={{
+              marginTop: 0
+            }}
+          >
+            👥 Usuarios
+          </h2>
+
+          {
+
+            proyecto.Usuarios
+              ?.length === 0
+
+              ? (
+
+                <p>
+                  Sin usuarios asignados.
+                </p>
 
               )
 
-            )
+              : (
 
-        }
+                proyecto.Usuarios
+                  ?.map(
 
-      </ul>
+                    usuario => (
 
-      <hr />
+                      <div
+                        key={
+                          usuario.id
+                        }
+                        style={{
+                          padding:
+                            "12px 0",
+                          borderBottom:
+                            "1px solid #f3f4f6"
+                        }}
+                      >
 
-      <h2>
+                        <strong>
+                          {usuario.nombre}
+                        </strong>
 
-        Tareas
+                        <br />
 
-      </h2>
+                        <small
+                          style={{
+                            color:
+                              "#6b7280"
+                          }}
+                        >
+                          {usuario.rol}
+                        </small>
 
-      <ul>
+                      </div>
 
-        {
+                    )
 
-          proyecto.Tareas
-            ?.map(
-
-              tarea => (
-
-                <li
-                  key={
-                    tarea.id
-                  }
-                >
-
-                  {
-                    tarea.titulo
-                  }
-
-                  {" - "}
-
-                  {
-                    tarea.estado
-                  }
-
-                </li>
+                  )
 
               )
 
-            )
+          }
 
-        }
+        </div>
 
-      </ul>
+        {/* TAREAS */}
+
+        <div
+          style={{
+            backgroundColor: "#fff",
+            border:
+              "1px solid #e5e7eb",
+            borderRadius: "18px",
+            padding: "25px"
+          }}
+        >
+
+          <h2
+            style={{
+              marginTop: 0
+            }}
+          >
+            📋 Tareas
+          </h2>
+
+          {
+
+            proyecto.Tareas
+              ?.length === 0
+
+              ? (
+
+                <p>
+                  No hay tareas asociadas.
+                </p>
+
+              )
+
+              : (
+
+                proyecto.Tareas
+                  ?.map(
+
+                    tarea => (
+
+                      <div
+                        key={
+                          tarea.id
+                        }
+                        style={{
+                          padding:
+                            "15px",
+                          border:
+                            "1px solid #e5e7eb",
+                          borderRadius:
+                            "12px",
+                          marginBottom:
+                            "12px"
+                        }}
+                      >
+
+                        <strong>
+                          {tarea.titulo}
+                        </strong>
+
+                        <div
+                          style={{
+                            marginTop:
+                              "6px",
+                            color:
+                              "#6b7280"
+                          }}
+                        >
+                          Estado:
+                          {" "}
+                          {tarea.estado}
+                        </div>
+
+                      </div>
+
+                    )
+
+                  )
+
+              )
+
+          }
+
+        </div>
+
+      </div>
 
     </MainLayout>
 

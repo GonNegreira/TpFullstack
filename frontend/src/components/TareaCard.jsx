@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
 
+import { useAuth }
+    from "../context/AuthContext";
+
 import EstadoBadge
     from "./EstadoBadge";
 
@@ -8,6 +11,8 @@ import PrioridadBadge
 
 export default function TareaCard({ tarea }) {
 
+    const { user } =
+        useAuth();
     return (
 
         <div
@@ -15,7 +20,7 @@ export default function TareaCard({ tarea }) {
                 backgroundColor: "#ffffff",
                 borderRadius: "12px",
                 padding: "18px",
-                border: "1px solid #e5e7eb",
+                border: "5px solid #e5e7eb",
                 boxShadow:
                     "0 2px 8px rgba(0,0,0,0.08)",
                 display: "flex",
@@ -55,16 +60,6 @@ export default function TareaCard({ tarea }) {
 
             </div>
 
-            <p
-                style={{
-                    color: "#555",
-                    marginBottom: "15px",
-                    flexGrow: 1
-                }}
-            >
-                {tarea.descripcion}
-            </p>
-
             <div
                 style={{
                     display: "flex",
@@ -100,18 +95,6 @@ export default function TareaCard({ tarea }) {
                 </span>
 
                 <span>
-                    👤 {tarea.responsable?.nombre}
-                </span>
-
-                <span>
-                    📅 Creada:
-                    {" "}
-                    {new Date(
-                        tarea.createdAt
-                    ).toLocaleDateString()}
-                </span>
-
-                <span>
                     ⏳ Límite:
                     {" "}
                     {new Date(
@@ -121,21 +104,54 @@ export default function TareaCard({ tarea }) {
 
             </div>
 
-            <Link
-                to={`/tareas/${tarea.id}`}
+            <div
                 style={{
-                    textDecoration: "none",
-                    padding: "10px",
-                    textAlign: "center",
-                    borderRadius: "8px",
-                    backgroundColor: "#2563eb",
-                    color: "white",
-                    fontWeight: "bold"
+                    display: "flex",
+                    gap: "10px"
                 }}
             >
-                Ver detalle
-            </Link>
 
+                <Link
+                    to={`/tareas/${tarea.id}`}
+                    style={{
+                        flex: 1,
+                        textDecoration: "none",
+                        padding: "10px",
+                        textAlign: "center",
+                        borderRadius: "8px",
+                        backgroundColor: "#2563eb",
+                        color: "white",
+                        fontWeight: "bold"
+                    }}
+                >
+                    Ver detalle
+                </Link>
+
+                {
+
+                    user?.rol === "admin" && (
+
+                        <Link
+                            to={`/tareas/${tarea.id}/editar`}
+                            style={{
+                                flex: 1,
+                                textDecoration: "none",
+                                padding: "10px",
+                                textAlign: "center",
+                                borderRadius: "8px",
+                                backgroundColor: "#ce8506",
+                                color: "white",
+                                fontWeight: "bold"
+                            }}
+                        >
+                            Editar
+                        </Link>
+
+                    )
+
+                }
+
+            </div>
         </div>
 
     );

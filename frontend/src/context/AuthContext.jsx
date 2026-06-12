@@ -4,6 +4,9 @@ import {
   useState
 } from "react";
 
+import * as authService
+  from "../api/auth.service";
+
 const AuthContext =
   createContext();
 
@@ -26,10 +29,19 @@ export function AuthProvider({
 
     });
 
-  function loginUser(
-    usuario,
-    token
+  async function login(
+    credentials
   ) {
+
+    const response =
+      await authService.login(
+        credentials
+      );
+
+    const {
+      token,
+      usuario
+    } = response.data;
 
     localStorage.setItem(
       "token",
@@ -46,6 +58,8 @@ export function AuthProvider({
     setUser(
       usuario
     );
+
+    return usuario;
 
   }
 
@@ -72,7 +86,7 @@ export function AuthProvider({
 
         user,
 
-        loginUser,
+        login,
 
         logout
 
