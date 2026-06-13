@@ -216,6 +216,30 @@ async function remove(
 
 }
 
+async function setIntegrantes(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService.setIntegrantes(
+        req.params.id,
+        req.body.integrantes
+      );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
 module.exports = {
 
   getAll,
@@ -234,6 +258,8 @@ module.exports = {
 
   reactivar,
 
-  finalizar
+  finalizar,
+
+  setIntegrantes
 
 };

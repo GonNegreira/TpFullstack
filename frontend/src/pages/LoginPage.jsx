@@ -1,9 +1,12 @@
 import { useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate }
+  from "react-router-dom";
 
 import { useAuth }
   from "../context/AuthContext";
+
+import "../styles/auth.css";
 
 export default function LoginPage() {
 
@@ -50,63 +53,34 @@ export default function LoginPage() {
 
   return (
 
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background:
-          "linear-gradient(135deg, #2563eb, #1e40af)"
-      }}
-    >
+    <div className="auth-page">
 
-      <div
-        style={{
-          width: "400px",
-          backgroundColor: "#fff",
-          padding: "40px",
-          borderRadius: "16px",
-          boxShadow:
-            "0 10px 30px rgba(0,0,0,0.2)"
-        }}
-      >
+      <div className="auth-card">
 
-        <h1
-          style={{
-            textAlign: "center",
-            marginBottom: "10px",
-            color: "#1e3a8a"
-          }}
-        >
+        <h1 className="auth-title">
+
           TaskManager
+
         </h1>
 
-        <p
-          style={{
-            textAlign: "center",
-            color: "#666",
-            marginBottom: "30px"
-          }}
-        >
+        <p className="auth-subtitle">
+
           Sistema de Gestión de Proyectos
+
         </p>
 
-        <form
-          onSubmit={handleSubmit}
-        >
+        <form onSubmit={handleSubmit}>
 
-          <div
-            style={{
-              marginBottom: "15px"
-            }}
-          >
+          <div className="form-group">
 
-            <label>
+            <label htmlFor="email">
+
               Email
+
             </label>
 
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) =>
@@ -115,29 +89,20 @@ export default function LoginPage() {
                 )
               }
               required
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                borderRadius: "8px",
-                border:
-                  "1px solid #ccc"
-              }}
             />
 
           </div>
 
-          <div
-            style={{
-              marginBottom: "20px"
-            }}
-          >
+          <div className="form-group">
 
-            <label>
+            <label htmlFor="password">
+
               Contraseña
+
             </label>
 
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) =>
@@ -146,60 +111,42 @@ export default function LoginPage() {
                 )
               }
               required
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginTop: "5px",
-                borderRadius: "8px",
-                border:
-                  "1px solid #ccc"
-              }}
             />
 
           </div>
 
-          {error && (
+          {
 
-            <div
-              style={{
-                color: "red",
-                marginBottom: "15px"
-              }}
-            >
-              {error}
-            </div>
+            error && (
 
-          )}
+              <div className="auth-error">
+
+                {error}
+
+              </div>
+
+            )
+
+          }
 
           <button
             type="submit"
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: "none",
-              borderRadius: "8px",
-              backgroundColor:
-                "#2563eb",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer"
-            }}
+            className="btn btn-primary auth-submit"
           >
+
             Ingresar
+
           </button>
 
         </form>
 
-        <div
-          style={{
-            marginTop: "20px",
-            textAlign: "center"
-          }}
-        >
+        <div className="auth-footer">
 
-          ¿No tenés cuenta?
+          <span>
 
-          <br />
+            ¿No tenés cuenta?
+
+          </span>
 
           <button
             onClick={() =>
@@ -207,16 +154,11 @@ export default function LoginPage() {
                 "/register"
               )
             }
-            style={{
-              marginTop: "10px",
-              background: "none",
-              border: "none",
-              color: "#2563eb",
-              cursor: "pointer",
-              fontWeight: "bold"
-            }}
+            className="auth-link-button"
           >
+
             Registrarse
+
           </button>
 
         </div>

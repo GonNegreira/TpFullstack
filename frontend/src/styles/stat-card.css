@@ -1,0 +1,92 @@
+.stat-card {
+
+  background: white;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 16px;
+
+  padding: 24px;
+
+  box-shadow:
+    0 4px 12px rgba(
+      0,
+      0,
+      0,
+      0.06
+    );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+}
+
+.stat-card:hover {
+
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 8px 18px rgba(
+      0,
+      0,
+      0,
+      0.10
+    );
+
+}
+
+.stat-card-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 12px;
+
+}
+
+.stat-card-title {
+
+  color: #6b7280;
+
+  font-size: 0.95rem;
+
+  font-weight: 500;
+
+}
+
+.stat-card-icon {
+
+  font-size: 1.8rem;
+
+}
+
+.stat-card-value {
+
+  font-size: 2.8rem;
+
+  font-weight: 700;
+
+}
+
+.stat-card-value.proyectos {
+
+  color: #2563eb;
+
+}
+
+.stat-card-value.usuarios {
+
+  color: #7c3aed;
+
+}
+
+.stat-card-value.tareas {
+
+  color: #16a34a;
+
+}

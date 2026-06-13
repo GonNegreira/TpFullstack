@@ -14,6 +14,11 @@ const authenticateJWT =
     "../middlewares/auth.middleware"
   );
 
+const authorize =
+  require(
+    "../middlewares/authorize.middleware"
+  );
+
 router.get(
   "/",
   authenticateJWT,
@@ -25,11 +30,6 @@ router.get(
   authenticateJWT,
   controller.getById
 );
-
-const authorize =
-  require(
-    "../middlewares/authorize.middleware"
-  );
 
 router.post(
   "/",
@@ -71,6 +71,14 @@ router.patch(
   authenticateJWT,
   authorize("admin"),
   controller.finalizar
+);
+
+// Reemplaza todos los integrantes del proyecto
+router.patch(
+  "/:id/integrantes",
+  authenticateJWT,
+  authorize("admin"),
+  controller.setIntegrantes
 );
 
 module.exports = router;

@@ -17,8 +17,8 @@ import {
 } from "../api/tareas.service";
 
 import {
-  getUsuarios
-} from "../api/usuarios.service";
+  getProyecto
+} from "../api/proyectos.service";
 
 export default function TareaEditPage() {
 
@@ -28,213 +28,126 @@ export default function TareaEditPage() {
   const navigate =
     useNavigate();
 
-  const [loading,
-    setLoading] =
+  const [loading, setLoading] =
     useState(true);
 
-  const [error,
-    setError] =
+  const [error, setError] =
     useState("");
 
-  const [usuarios,
-    setUsuarios] =
+  const [integrantes, setIntegrantes] =
     useState([]);
 
-  const [titulo,
-    setTitulo] =
+  const [titulo, setTitulo] =
     useState("");
 
-  const [descripcion,
-    setDescripcion] =
+  const [descripcion, setDescripcion] =
     useState("");
 
-  const [prioridad,
-    setPrioridad] =
+  const [prioridad, setPrioridad] =
     useState("");
 
-  const [estado,
-    setEstado] =
+  const [fechaLimite, setFechaLimite] =
     useState("");
 
-  const [fechaLimite,
-    setFechaLimite] =
+  const [responsableId, setResponsableId] =
     useState("");
 
-  const [responsableId,
-    setResponsableId] =
+  // Estado actual solo para mostrarlo, no para editar
+  const [estadoActual, setEstadoActual] =
     useState("");
 
   useEffect(() => {
-
     loadData();
-
   }, []);
 
   async function loadData() {
-
     try {
-
       setLoading(true);
 
-      const [
+      const tareaResponse = await getTarea(id);
+      const tarea = tareaResponse.data;
 
-        tareaResponse,
-
-        usuariosResponse
-
-      ] = await Promise.all([
-
-        getTarea(id),
-
-        getUsuarios()
-
-      ]);
-
-      const tarea =
-        tareaResponse.data;
-
-      setUsuarios(
-        usuariosResponse.data
-      );
-
-      setTitulo(
-        tarea.titulo
-      );
-
-      setDescripcion(
-        tarea.descripcion
-      );
-
-      setPrioridad(
-        tarea.prioridad
-      );
-
-      setEstado(
-        tarea.estado
-      );
-
+      setTitulo(tarea.titulo);
+      setDescripcion(tarea.descripcion);
+      setPrioridad(tarea.prioridad);
+      setEstadoActual(tarea.estado);
       setFechaLimite(
-
-        tarea.fechaLimite
-          ?.split("T")[0]
-
-          || tarea.fechaLimite
-
+        tarea.fechaLimite?.split("T")[0] || tarea.fechaLimite
       );
+      setResponsableId(tarea.responsableId);
 
-      setResponsableId(
-        tarea.responsableId
+      // Cargar integrantes del proyecto de esta tarea
+      const proyectoResponse =
+        await getProyecto(tarea.proyectoId);
+
+      setIntegrantes(
+        proyectoResponse.data.Usuarios || []
       );
 
     } catch (err) {
-
       console.error(err);
-
-      setError(
-        "No se pudo cargar la tarea"
-      );
-
+      setError("No se pudo cargar la tarea");
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   async function handleSubmit(e) {
-
     e.preventDefault();
 
     try {
+      await updateTarea(id, {
+        titulo,
+        descripcion,
+        prioridad,
+        fechaLimite,
+        responsableId
+      });
 
-      await updateTarea(
-
-        id,
-
-        {
-
-          titulo,
-
-          descripcion,
-
-          prioridad,
-
-          estado,
-
-          fechaLimite,
-
-          responsableId
-
-        }
-
-      );
-
-      navigate(
-        `/tareas/${id}`
-      );
+      navigate(`/tareas/${id}`);
 
     } catch (err) {
-
       console.error(err);
-
-      alert(
+      setError(
         err.response?.data?.error ||
         "Error al actualizar tarea"
       );
-
     }
-
   }
 
   const inputStyle = {
-
     width: "100%",
-
     padding: "12px",
-
-    border:
-      "1px solid #d1d5db",
-
+    border: "1px solid #d1d5db",
     borderRadius: "8px",
-
     fontSize: "14px",
-
-    boxSizing:
-      "border-box"
-
+    boxSizing: "border-box"
   };
 
   const labelStyle = {
-
     display: "block",
-
     marginBottom: "6px",
-
     fontWeight: "600",
-
     color: "#374151"
+  };
 
+  const ESTADO_LABELS = {
+    pendiente: "⏳ Pendiente",
+    en_progreso: "🔵 En progreso",
+    bloqueada: "🔴 Bloqueada",
+    finalizada: "✅ Finalizada",
+    cancelada: "⛔ Cancelada"
   };
 
   if (loading) {
-
     return (
-
       <MainLayout>
-
-        <p>
-          Cargando tarea...
-        </p>
-
+        <p>Cargando tarea...</p>
       </MainLayout>
-
     );
-
   }
 
   return (
-
     <MainLayout>
 
       <div
@@ -244,35 +157,61 @@ export default function TareaEditPage() {
           backgroundColor: "#fff",
           padding: "30px",
           borderRadius: "12px",
-          boxShadow:
-            "0 4px 15px rgba(0,0,0,0.08)"
+          boxShadow: "0 4px 15px rgba(0,0,0,0.08)"
         }}
       >
 
-        <h1
+        <button
+          onClick={() => navigate(`/tareas/${id}`)}
           style={{
-            marginTop: 0,
-            marginBottom: "10px"
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            cursor: "pointer",
+            marginBottom: "20px",
+            fontWeight: "600",
+            padding: 0
           }}
         >
+          ← Volver al detalle
+        </button>
+
+        <h1 style={{ marginTop: 0, marginBottom: "6px" }}>
           ✏️ Editar tarea
         </h1>
 
-        <p
-          style={{
-            color: "#6b7280",
-            marginBottom: "25px"
-          }}
-        >
+        <p style={{ color: "#6b7280", marginBottom: "25px" }}>
           Modificá los datos de la tarea y guardá los cambios.
         </p>
 
-        {error && (
+        {/* Estado actual — solo lectura, se cambia desde el detalle */}
+        <div
+          style={{
+            backgroundColor: "#f1f5f9",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            padding: "12px 16px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px"
+          }}
+        >
+          <span style={{ color: "#64748b", fontWeight: "600", fontSize: "14px" }}>
+            Estado actual:
+          </span>
+          <span style={{ fontWeight: "700", color: "#1e293b" }}>
+            {ESTADO_LABELS[estadoActual] || estadoActual}
+          </span>
+          <span style={{ color: "#94a3b8", fontSize: "13px" }}>
+            — Para cambiar el estado usá los botones en el detalle de la tarea.
+          </span>
+        </div>
 
+        {error && (
           <div
             style={{
-              backgroundColor:
-                "#fee2e2",
+              backgroundColor: "#fee2e2",
               color: "#b91c1c",
               padding: "12px",
               borderRadius: "8px",
@@ -281,227 +220,99 @@ export default function TareaEditPage() {
           >
             {error}
           </div>
-
         )}
 
         <form
           onSubmit={handleSubmit}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "18px"
-          }}
+          style={{ display: "flex", flexDirection: "column", gap: "18px" }}
         >
 
           <div>
-
-            <label
-              htmlFor="titulo"
-              style={labelStyle}
-            >
+            <label htmlFor="titulo" style={labelStyle}>
               Título
             </label>
-
             <input
               id="titulo"
               value={titulo}
-              onChange={e =>
-                setTitulo(
-                  e.target.value
-                )
-              }
+              onChange={e => setTitulo(e.target.value)}
+              required
               style={inputStyle}
             />
-
           </div>
 
           <div>
-
-            <label
-              htmlFor="descripcion"
-              style={labelStyle}
-            >
+            <label htmlFor="descripcion" style={labelStyle}>
               Descripción
             </label>
-
             <textarea
               id="descripcion"
               rows="5"
               value={descripcion}
-              onChange={e =>
-                setDescripcion(
-                  e.target.value
-                )
-              }
-              style={{
-                ...inputStyle,
-                resize: "vertical"
-              }}
+              onChange={e => setDescripcion(e.target.value)}
+              required
+              style={{ ...inputStyle, resize: "vertical" }}
             />
-
           </div>
 
           <div>
-
-            <label
-              htmlFor="prioridad"
-              style={labelStyle}
-            >
+            <label htmlFor="prioridad" style={labelStyle}>
               Prioridad
             </label>
-
             <select
               id="prioridad"
               value={prioridad}
-              onChange={e =>
-                setPrioridad(
-                  e.target.value
-                )
-              }
+              onChange={e => setPrioridad(e.target.value)}
               style={inputStyle}
             >
-
-              <option value="baja">
-                Baja
-              </option>
-
-              <option value="media">
-                Media
-              </option>
-
-              <option value="alta">
-                Alta
-              </option>
-
-              <option value="critica">
-                Crítica
-              </option>
-
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
             </select>
-
           </div>
 
           <div>
-
-            <label
-              htmlFor="estado"
-              style={labelStyle}
-            >
-              Estado
-            </label>
-
-            <select
-              id="estado"
-              value={estado}
-              onChange={e =>
-                setEstado(
-                  e.target.value
-                )
-              }
-              style={inputStyle}
-            >
-
-              <option value="pendiente">
-                Pendiente
-              </option>
-
-              <option value="en_progreso">
-                En progreso
-              </option>
-
-              <option value="bloqueada">
-                Bloqueada
-              </option>
-
-              <option value="finalizada">
-                Finalizada
-              </option>
-
-              <option value="cancelada">
-                Cancelada
-              </option>
-
-            </select>
-
-          </div>
-
-          <div>
-
-            <label
-              htmlFor="fechaLimite"
-              style={labelStyle}
-            >
+            <label htmlFor="fechaLimite" style={labelStyle}>
               Fecha límite
             </label>
-
             <input
               id="fechaLimite"
               type="date"
               value={fechaLimite}
-              onChange={e =>
-                setFechaLimite(
-                  e.target.value
-                )
-              }
+              onChange={e => setFechaLimite(e.target.value)}
+              required
               style={inputStyle}
             />
-
           </div>
 
           <div>
-
-            <label
-              htmlFor="responsable"
-              style={labelStyle}
-            >
+            <label htmlFor="responsable" style={labelStyle}>
               Responsable
             </label>
-
-            <select
-              id="responsable"
-              value={responsableId}
-              onChange={e =>
-                setResponsableId(
-                  Number(
-                    e.target.value
-                  )
-                )
-              }
-              style={{
-                ...inputStyle,
-                cursor: "pointer"
-              }}
-            >
-
-              <option value="">
-                Seleccionar responsable
-              </option>
-
-              {
-
-                usuarios.map(
-
-                  usuario => (
-
-                    <option
-                      key={usuario.id}
-                      value={usuario.id}
-                    >
-
-                      {usuario.nombre}
-                      {" "}
-                      ({usuario.rol})
-
-                    </option>
-
-                  )
-
-                )
-
-              }
-
-            </select>
-
+            {integrantes.length === 0 ? (
+              <p style={{ color: "#9ca3af", fontSize: "14px" }}>
+                No se pudieron cargar los integrantes del proyecto.
+              </p>
+            ) : (
+              <select
+                id="responsable"
+                value={responsableId}
+                onChange={e => setResponsableId(Number(e.target.value))}
+                style={{ ...inputStyle, cursor: "pointer" }}
+              >
+                <option value="">
+                  Seleccionar responsable
+                </option>
+                {integrantes.map(usuario => (
+                  <option key={usuario.id} value={usuario.id}>
+                    {usuario.nombre} ({usuario.rol})
+                  </option>
+                ))}
+              </select>
+            )}
+            <small style={{ color: "#94a3b8", marginTop: "4px", display: "block" }}>
+              Solo se muestran integrantes del proyecto.
+            </small>
           </div>
 
           <div
@@ -511,16 +322,13 @@ export default function TareaEditPage() {
               marginTop: "10px"
             }}
           >
-
             <button
               type="submit"
               style={{
-                backgroundColor:
-                  "#2563eb",
+                backgroundColor: "#2563eb",
                 color: "white",
                 border: "none",
-                padding:
-                  "12px 20px",
+                padding: "12px 20px",
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontWeight: "600"
@@ -531,18 +339,12 @@ export default function TareaEditPage() {
 
             <button
               type="button"
-              onClick={() =>
-                navigate(
-                  `/tareas/${id}`
-                )
-              }
+              onClick={() => navigate(`/tareas/${id}`)}
               style={{
-                backgroundColor:
-                  "#e5e7eb",
+                backgroundColor: "#e5e7eb",
                 color: "#111827",
                 border: "none",
-                padding:
-                  "12px 20px",
+                padding: "12px 20px",
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontWeight: "600"
@@ -550,7 +352,6 @@ export default function TareaEditPage() {
             >
               Cancelar
             </button>
-
           </div>
 
         </form>
@@ -558,7 +359,6 @@ export default function TareaEditPage() {
       </div>
 
     </MainLayout>
-
   );
 
 }

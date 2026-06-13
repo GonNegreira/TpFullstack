@@ -1,3 +1,6 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 import {
   useEffect,
   useState
@@ -14,10 +17,15 @@ import {
   getProyecto
 } from "../api/proyectos.service";
 
+import "../styles/proyecto-detalle.css";
+
 export default function ProyectoDetallePage() {
 
   const { id } =
     useParams();
+
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [proyecto,
     setProyecto] =
@@ -54,13 +62,10 @@ export default function ProyectoDetallePage() {
 
       <MainLayout>
 
-        <div
-          style={{
-            textAlign: "center",
-            padding: "50px"
-          }}
-        >
+        <div className="proyecto-detalle-loading">
+
           Cargando proyecto...
+
         </div>
 
       </MainLayout>
@@ -69,188 +74,120 @@ export default function ProyectoDetallePage() {
 
   }
 
-  const estadoColor = {
-
-    activo:
-      "#16a34a",
-
-    pausado:
-      "#f59e0b",
-
-    finalizado:
-      "#6b7280"
-
-  };
-
   return (
 
     <MainLayout>
 
       {/* HEADER */}
 
-      <div
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: "18px",
-          padding: "30px",
-          border:
-            "1px solid #e5e7eb",
-          marginBottom: "25px",
-          boxShadow:
-            "0 2px 8px rgba(0,0,0,0.05)"
-        }}
-      >
+      <div className="proyecto-detalle-header">
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            flexWrap: "wrap",
-            gap: "10px"
-          }}
-        >
+        <div className="proyecto-detalle-header-top">
 
-          <div>
+        <div>
 
-            <h1
-              style={{
-                margin: 0
-              }}
-            >
-              📁 {proyecto.nombre}
-            </h1>
+          <h1 className="proyecto-detalle-title">
 
-            <p
-              style={{
-                marginTop: "8px",
-                color: "#6b7280"
-              }}
-            >
-              Código:
-              {" "}
-              <strong>
-                {proyecto.codigo}
-              </strong>
-            </p>
+            📁 {proyecto.nombre}
 
-          </div>
+          </h1>
+
+          <p className="proyecto-detalle-code">
+
+            Código:
+
+            {" "}
+
+            <strong>
+
+              {proyecto.codigo}
+
+            </strong>
+
+          </p>
+
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
 
           <span
-            style={{
-              backgroundColor:
-                estadoColor[
-                  proyecto.estado
-                ] || "#2563eb",
-
-              color: "white",
-
-              padding:
-                "8px 14px",
-
-              borderRadius:
-                "999px",
-
-              fontWeight:
-                "600",
-
-              textTransform:
-                "capitalize"
-            }}
+            className={`proyecto-detalle-status proyecto-detalle-status-${proyecto.estado}`}
           >
             {proyecto.estado}
           </span>
 
+          {user?.rol === "admin" && (
+            <button
+              onClick={() => navigate(`/proyectos/${proyecto.id}/editar`)}
+              style={{
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "0.9rem"
+              }}
+            >
+              ✏️ Editar
+            </button>
+          )}
+
         </div>
 
-        <p
-          style={{
-            marginTop: "20px",
-            color: "#374151",
-            lineHeight: 1.7
-          }}
-        >
+      </div>
+
+        <p className="proyecto-detalle-description">
+
           {proyecto.descripcion}
+
         </p>
 
       </div>
 
       {/* RESUMEN */}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(220px,1fr))",
-          gap: "20px",
-          marginBottom: "30px"
-        }}
-      >
+      <div className="proyecto-detalle-summary">
 
-        <div
-          style={{
-            backgroundColor: "#fff",
-            border:
-              "1px solid #e5e7eb",
-            borderRadius: "16px",
-            padding: "20px"
-          }}
-        >
+        <div className="proyecto-detalle-stat-card">
 
-          <div
-            style={{
-              color: "#6b7280"
-            }}
-          >
+          <div className="proyecto-detalle-stat-label">
+
             Usuarios asignados
+
           </div>
 
-          <div
-            style={{
-              fontSize: "2rem",
-              fontWeight: "700",
-              color: "#2563eb"
-            }}
-          >
+          <div className="proyecto-detalle-stat-value proyecto-detalle-stat-blue">
+
             {
+
               proyecto
                 .Usuarios?.length || 0
+
             }
+
           </div>
 
         </div>
 
-        <div
-          style={{
-            backgroundColor: "#fff",
-            border:
-              "1px solid #e5e7eb",
-            borderRadius: "16px",
-            padding: "20px"
-          }}
-        >
+        <div className="proyecto-detalle-stat-card">
 
-          <div
-            style={{
-              color: "#6b7280"
-            }}
-          >
+          <div className="proyecto-detalle-stat-label">
+
             Tareas del proyecto
+
           </div>
 
-          <div
-            style={{
-              fontSize: "2rem",
-              fontWeight: "700",
-              color: "#16a34a"
-            }}
-          >
+          <div className="proyecto-detalle-stat-value proyecto-detalle-stat-green">
+
             {
+
               proyecto
                 .Tareas?.length || 0
+
             }
+
           </div>
 
         </div>
@@ -259,33 +196,16 @@ export default function ProyectoDetallePage() {
 
       {/* USUARIOS Y TAREAS */}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "1fr 2fr",
-          gap: "25px"
-        }}
-      >
+      <div className="proyecto-detalle-content">
 
         {/* USUARIOS */}
 
-        <div
-          style={{
-            backgroundColor: "#fff",
-            border:
-              "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "25px"
-          }}
-        >
+        <div className="proyecto-detalle-panel">
 
-          <h2
-            style={{
-              marginTop: 0
-            }}
-          >
+          <h2 className="proyecto-detalle-panel-title">
+
             👥 Usuarios
+
           </h2>
 
           {
@@ -295,8 +215,10 @@ export default function ProyectoDetallePage() {
 
               ? (
 
-                <p>
+                <p className="proyecto-detalle-empty">
+
                   Sin usuarios asignados.
+
                 </p>
 
               )
@@ -312,27 +234,19 @@ export default function ProyectoDetallePage() {
                         key={
                           usuario.id
                         }
-                        style={{
-                          padding:
-                            "12px 0",
-                          borderBottom:
-                            "1px solid #f3f4f6"
-                        }}
+                        className="proyecto-detalle-user-row"
                       >
 
                         <strong>
+
                           {usuario.nombre}
+
                         </strong>
 
-                        <br />
+                        <small>
 
-                        <small
-                          style={{
-                            color:
-                              "#6b7280"
-                          }}
-                        >
                           {usuario.rol}
+
                         </small>
 
                       </div>
@@ -349,22 +263,12 @@ export default function ProyectoDetallePage() {
 
         {/* TAREAS */}
 
-        <div
-          style={{
-            backgroundColor: "#fff",
-            border:
-              "1px solid #e5e7eb",
-            borderRadius: "18px",
-            padding: "25px"
-          }}
-        >
+        <div className="proyecto-detalle-panel">
 
-          <h2
-            style={{
-              marginTop: 0
-            }}
-          >
+          <h2 className="proyecto-detalle-panel-title">
+
             📋 Tareas
+
           </h2>
 
           {
@@ -374,8 +278,10 @@ export default function ProyectoDetallePage() {
 
               ? (
 
-                <p>
+                <p className="proyecto-detalle-empty">
+
                   No hay tareas asociadas.
+
                 </p>
 
               )
@@ -391,33 +297,23 @@ export default function ProyectoDetallePage() {
                         key={
                           tarea.id
                         }
-                        style={{
-                          padding:
-                            "15px",
-                          border:
-                            "1px solid #e5e7eb",
-                          borderRadius:
-                            "12px",
-                          marginBottom:
-                            "12px"
-                        }}
+                        className="proyecto-detalle-task-card"
                       >
 
                         <strong>
+
                           {tarea.titulo}
+
                         </strong>
 
-                        <div
-                          style={{
-                            marginTop:
-                              "6px",
-                            color:
-                              "#6b7280"
-                          }}
-                        >
+                        <div className="proyecto-detalle-task-status">
+
                           Estado:
+
                           {" "}
+
                           {tarea.estado}
+
                         </div>
 
                       </div>

@@ -1,0 +1,153 @@
+.navbar {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 14px 24px;
+
+  background-color: rgb(206, 206, 206);
+
+  border-bottom:
+    1px solid #e2e8f0;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.04);
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 100;
+
+}
+
+.navbar-logo {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+}
+
+.navbar-title {
+
+  font-size: 1.2rem;
+
+  font-weight: 700;
+
+  color: #1e293b;
+
+}
+
+.navbar-subtitle {
+
+  font-size: 0.8rem;
+
+  color: #64748b;
+
+}
+
+.navbar-links {
+
+  display: flex;
+
+  gap: 10px;
+
+}
+
+.nav-link {
+
+  text-decoration: none;
+
+  color: #475569;
+
+  padding: 8px 14px;
+
+  border-radius: 8px;
+
+  font-weight: 600;
+
+  transition: all 0.2s;
+
+}
+
+.nav-link:hover {
+
+  background: #e2e8f0;
+
+}
+
+.nav-link.active {
+
+  background: #2563eb;
+
+  color: white;
+
+}
+
+.navbar-user {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+}
+
+.user-info {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+
+}
+
+.role-badge {
+
+  background: #dbeafe;
+
+  color: #1d4ed8;
+
+  padding: 2px 8px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+}
+
+.logout-button {
+
+  border: none;
+
+  background: #ef4444;
+
+  color: white;
+
+  padding: 8px 14px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-weight: 600;
+
+  transition: background 0.2s;
+
+}
+
+.logout-button:hover {
+
+  background: #dc2626;
+
+}

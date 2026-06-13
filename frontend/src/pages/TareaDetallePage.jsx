@@ -1,3 +1,9 @@
+import "../styles/tarea-detalle.css";
+import "../styles/cards.css";
+import "../styles/buttons.css";
+
+
+
 import {
   useEffect,
   useState
@@ -11,9 +17,7 @@ import {
 import MainLayout
   from "../layouts/MainLayout";
 
-import {
-  getTarea
-} from "../api/tareas.service";
+import { getTarea, getHistorialTarea } from "../api/tareas.service";
 
 import EstadoBadge
   from "../components/EstadoBadge";
@@ -29,6 +33,8 @@ export default function TareaDetallePage() {
   const [tarea,
     setTarea] =
     useState(null);
+
+  const [historial, setHistorial] = useState([]);
 
   const [loading,
     setLoading] =
@@ -58,10 +64,13 @@ export default function TareaDetallePage() {
     } finally {
 
       setLoading(false);
+      const hRes = await getHistorialTarea(id);
+      setHistorial(hRes.data);
 
     }
 
   }
+
 
   if (loading) {
 
@@ -87,63 +96,33 @@ export default function TareaDetallePage() {
 
     <MainLayout>
 
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto"
-        }}
-      >
+      <div className="tarea-detalle-container">
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px"
-          }}
-        >
+        <div className="tarea-detalle-header">
 
           <div>
 
-            <div
-              style={{
-                color: "#2563eb",
-                fontWeight: "bold",
-                fontSize: "0.9rem",
-                textTransform: "uppercase"
-              }}
-            >
+            <div className="tarea-detalle-id">
+
               Tarea #{tarea.id}
+
             </div>
 
-            <h1
-              style={{
-                margin: "5px 0",
-                color: "#111827"
-              }}
-            >
+            <h1 className="tarea-detalle-title">
+
               {tarea.titulo}
+
             </h1>
 
           </div>
 
           <Link
             to={`/tareas/${tarea.id}/editar`}
-            style={{
-              textDecoration: "none"
-            }}
+            className="btn-link"
           >
 
             <button
-              style={{
-                backgroundColor: "#2563eb",
-                color: "white",
-                border: "none",
-                padding: "10px 18px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontWeight: "bold"
-              }}
+              className="btn btn-primary"
             >
               ✏️ Editar
             </button>
@@ -152,13 +131,7 @@ export default function TareaDetallePage() {
 
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginBottom: "20px"
-          }}
-        >
+        <div className="tarea-detalle-badges">
 
           <EstadoBadge
             estado={tarea.estado}
@@ -170,120 +143,131 @@ export default function TareaDetallePage() {
 
         </div>
 
-        <div
-          style={{
-            backgroundColor: "#fff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "12px",
-            padding: "20px",
-            marginBottom: "20px",
-            boxShadow:
-              "0 2px 8px rgba(0,0,0,0.06)"
-          }}
-        >
+        <div className="card tarea-detalle-description">
 
-          <h3
-            style={{
-              marginTop: 0
-            }}
-          >
+          <h3>
             Descripción
           </h3>
 
-          <p
-            style={{
-              color: "#4b5563",
-              lineHeight: "1.7"
-            }}
-          >
+          <p>
             {tarea.descripcion}
           </p>
 
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "20px"
-          }}
-        >
+        <div className="tarea-detalle-grid">
 
           <div
-            style={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "20px"
-            }}
+            className="card tarea-detalle-card"
           >
 
-            <h3
-              style={{
-                marginTop: 0
-              }}
-            >
+            <h3>
               Información General
             </h3>
 
             <p>
-              <strong>Proyecto:</strong>
+
+              <strong>
+                Proyecto:
+              </strong>
+
               <br />
+
               📁 {tarea.Proyecto?.nombre}
+
             </p>
 
             <p>
-              <strong>Responsable:</strong>
+
+              <strong>
+                Responsable:
+              </strong>
+
               <br />
+
               👤 {tarea.responsable?.nombre}
+
             </p>
 
           </div>
 
           <div
-            style={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "20px"
-            }}
+            className="card tarea-detalle-card"
           >
 
-            <h3
-              style={{
-                marginTop: 0
-              }}
-            >
+            <h3>
               Fechas
             </h3>
 
             <p>
-              <strong>Creación:</strong>
+
+              <strong>
+                Creación:
+              </strong>
+
               <br />
+
               📅 {
+
                 tarea.createdAt
+
                   ? new Date(
-                      tarea.createdAt
-                    ).toLocaleDateString()
+                    tarea.createdAt
+                  ).toLocaleDateString()
+
                   : "-"
+
               }
+
             </p>
 
             <p>
-              <strong>Fecha límite:</strong>
+
+              <strong>
+                Fecha límite:
+              </strong>
+
               <br />
+
               ⏳ {
+
                 tarea.fechaLimite
+
                   ? new Date(
-                      tarea.fechaLimite
-                    ).toLocaleDateString()
+                    tarea.fechaLimite
+                  ).toLocaleDateString()
+
                   : "-"
+
               }
+
             </p>
 
           </div>
 
+        </div>
+
+        <div className="card" style={{ marginTop: "20px", padding: "20px" }}>
+          <h3>📋 Historial de cambios</h3>
+          {historial.length === 0 ? (
+            <p style={{ color: "#6b7280" }}>Sin historial registrado.</p>
+          ) : (
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              {historial.map(h => (
+                <li key={h.id} style={{ borderBottom: "1px solid #e5e7eb", padding: "10px 0" }}>
+                  <strong>{h.accion}</strong>
+                  <span style={{ color: "#6b7280", marginLeft: "10px", fontSize: "0.85rem" }}>
+                    {new Date(h.fechaHora).toLocaleString()}
+                  </span>
+                  {h.valorAnterior && (
+                    <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
+                      Antes: {JSON.stringify(h.valorAnterior)}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
       </div>
@@ -292,4 +276,5 @@ export default function TareaDetallePage() {
 
   );
 
-}
+
+};

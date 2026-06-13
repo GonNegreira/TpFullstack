@@ -1,7 +1,11 @@
+// TareasPage.jsx
 import {
   useEffect,
   useState
 } from "react";
+
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 import MainLayout
   from "../layouts/MainLayout";
@@ -13,51 +17,61 @@ import {
   getTareas
 } from "../api/tareas.service";
 
+import {
+  getProyectos
+} from "../api/proyectos.service";
+
 export default function TareasPage() {
 
-  const [tareas,
-    setTareas] =
+  const { user } = useAuth();
+
+  const [tareas, setTareas] =
     useState([]);
 
-  const [loading,
-    setLoading] =
+  const [loading, setLoading] =
     useState(false);
 
-  const [estado,
-    setEstado] =
+  const [estado, setEstado] =
     useState("");
 
-  const [prioridad,
-    setPrioridad] =
+  const [prioridad, setPrioridad] =
     useState("");
 
-  const [sortBy,
-    setSortBy] =
+  const [proyectoId, setProyectoId] =
+    useState("");
+
+  const [proyectos, setProyectos] =
+    useState([]);
+
+  const [sortBy, setSortBy] =
     useState("createdAt");
 
-  const [order,
-    setOrder] =
+  const [order, setOrder] =
     useState("DESC");
 
-  const [page,
-    setPage] =
+  const [page, setPage] =
     useState(1);
 
-  const [totalPages,
-    setTotalPages] =
+  const [totalPages, setTotalPages] =
     useState(1);
 
-  const [search,
-    setSearch] =
+  const [search, setSearch] =
     useState("");
 
+  // Carga proyectos una sola vez para el filtro
   useEffect(() => {
+    getProyectos()
+      .then(r => setProyectos(r.data))
+      .catch(console.error);
+  }, []);
 
+  // Recarga tareas cada vez que cambia un filtro
+  useEffect(() => {
     loadTareas();
-
   }, [
     estado,
     prioridad,
+    proyectoId,
     sortBy,
     order,
     page
@@ -71,23 +85,17 @@ export default function TareasPage() {
 
       const response =
         await getTareas({
-
           estado,
-
           prioridad,
-
+          proyectoId: proyectoId || undefined,
           sortBy,
-
           order,
-
           page,
-
           limit: 10
-
         });
 
       setTareas(
-        response.data.data
+        response.data.data || []
       );
 
       setTotalPages(
@@ -107,13 +115,11 @@ export default function TareasPage() {
   }
 
   const tareasFiltradas =
-    tareas.filter(
+    (tareas || []).filter(
       tarea =>
         tarea.titulo
           .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
+          .includes(search.toLowerCase())
     );
 
   return (
@@ -131,42 +137,52 @@ export default function TareasPage() {
 
         <div
           style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             marginBottom: "30px"
           }}
         >
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "2.2rem",
-              color: "#1e293b"
-            }}
-          >
-            📋 Gestión de Tareas
-          </h1>
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "2.2rem",
+                color: "#1e293b"
+              }}
+            >
+              📋 Gestión de Tareas
+            </h1>
 
-          <p
-            style={{
-              color: "#64748b",
-              marginTop: "8px"
-            }}
-          >
-            Visualiza, filtra y administra las tareas del sistema.
-          </p>
+            <p
+              style={{
+                color: "#64748b",
+                marginTop: "8px"
+              }}
+            >
+              Visualiza, filtra y administra las tareas del sistema.
+            </p>
+          </div>
 
-        </div>
-
-        {/* METRICAS */}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "15px",
-            marginBottom: "25px"
-          }}
-        >
+          {(user?.rol === "admin" || user?.rol === "lider") && (
+            <Link to="/tareas/nueva">
+              <button
+                style={{
+                  background: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  padding: "12px 18px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "1rem"
+                }}
+              >
+                ➕ Nueva Tarea
+              </button>
+            </Link>
+          )}
 
         </div>
 
@@ -177,214 +193,129 @@ export default function TareasPage() {
             background: "#fff",
             padding: "20px",
             borderRadius: "12px",
-            boreder: "1px solid #e5e7eb",
-            boxShadow:
-              "0 2px 10px rgba(0,0,0,0.08)",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
             marginBottom: "30px"
           }}
         >
-          <div>
-            <h3
+
+          <h3
+            style={{
+              marginTop: 0,
+              color: "#334155"
+            }}
+          >
+            🔎 Filtros y búsqueda
+          </h3>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "15px"
+            }}
+          >
+
+            <input
+              type="text"
+              placeholder="Buscar por título..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={inputStyle}
+            />
+
+            <select
+              value={proyectoId}
+              onChange={e => {
+                setPage(1);
+                setProyectoId(e.target.value);
+              }}
+              style={inputStyle}
+            >
+              <option value="">
+                Todos los proyectos
+              </option>
+              {proyectos.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={estado}
+              onChange={e => {
+                setPage(1);
+                setEstado(e.target.value);
+              }}
+              style={inputStyle}
+            >
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en_progreso">En progreso</option>
+              <option value="bloqueada">Bloqueada</option>
+              <option value="finalizada">Finalizada</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+
+            <select
+              value={prioridad}
+              onChange={e => {
+                setPage(1);
+                setPrioridad(e.target.value);
+              }}
+              style={inputStyle}
+            >
+              <option value="">Todas las prioridades</option>
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
+            </select>
+
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              marginTop: "15px",
+              gap: "15px",
+              flexWrap: "wrap",
+              alignItems: "center"
+            }}
+          >
+
+            <label
               style={{
-                marginTop: 0,
-                color: "#334155"
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#475569"
               }}
             >
-              🔎 Filtros y búsqueda
-            </h3>
+              Ordenar por:
+            </label>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(220px,1fr))",
-                gap: "15px"
-              }}
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              style={inputStyle}
             >
+              <option value="createdAt">Fecha creación</option>
+              <option value="titulo">Título</option>
+              <option value="estado">Estado</option>
+              <option value="prioridad">Prioridad</option>
+              <option value="fechaLimite">Fecha límite</option>
+            </select>
 
-              <input
-                type="text"
-                placeholder="Buscar por título..."
-                value={search}
-                onChange={e =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              />
-
-              <select
-                value={estado}
-                onChange={e => {
-
-                  setPage(1);
-
-                  setEstado(
-                    e.target.value
-                  );
-
-                }}
-                style={inputStyle}
-              >
-
-                <option value="">
-                  Todos los estados
-                </option>
-
-                <option value="pendiente">
-                  Pendiente
-                </option>
-
-                <option value="en_progreso">
-                  En progreso
-                </option>
-
-                <option value="bloqueada">
-                  Bloqueada
-                </option>
-
-                <option value="finalizada">
-                  Finalizada
-                </option>
-
-                <option value="cancelada">
-                  Cancelada
-                </option>
-
-              </select>
-
-              <select
-                value={prioridad}
-                onChange={e => {
-
-                  setPage(1);
-
-                  setPrioridad(
-                    e.target.value
-                  );
-
-                }}
-                style={inputStyle}
-              >
-
-                <option value="">
-                  Todas las prioridades
-                </option>
-
-                <option value="baja">
-                  Baja
-                </option>
-
-                <option value="media">
-                  Media
-                </option>
-
-                <option value="alta">
-                  Alta
-                </option>
-
-                <option value="critica">
-                  Crítica
-                </option>
-
-              </select>
-            </div>
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  marginTop: "15px",
-                  gap: "15px",
-                  flexWrap: "wrap"
-
-                }}
-              >
-                <label
-                  style={{
-                    marginTop: "14px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: "#475569"
-                  }}
-                >
-                  Ordenar por:
-                </label>
-
-                <select
-                  value={sortBy}
-                  onChange={e =>
-                    setSortBy(
-                      e.target.value
-                    )
-                  }
-                  style={inputStyle}
-                >
-
-                  <option value="createdAt">
-                    Fecha creación
-                  </option>
-
-                  <option value="titulo">
-                    Título
-                  </option>
-
-                  <option value="estado">
-                    Estado
-                  </option>
-
-                  <option value="prioridad">
-                    Prioridad
-                  </option>
-
-                  <option value="fechaLimite">
-                    Fecha límite
-                  </option>
-
-                </select>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "15px",
-                flexWrap: "wrap"
-              }}
+            <select
+              value={order}
+              onChange={e => setOrder(e.target.value)}
+              style={inputStyle}
             >
-              <label
-                style={{
-                  marginBottom: "6px",
-                  marginTop: "14px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#475569"
-                }}
-              >
-                Dirección:
-              </label>
-
-              <select
-                value={order}
-                onChange={e =>
-                  setOrder(
-                    e.target.value
-                  )
-                }
-                style={inputStyle}
-              >
-
-                <option value="ASC">
-                  Ascendente ↑
-                </option>
-
-                <option value="DESC">
-                  Descendente ↓
-                </option>
-
-              </select>
-
-            </div>
+              <option value="ASC">Ascendente ↑</option>
+              <option value="DESC">Descendente ↓</option>
+            </select>
 
           </div>
 
@@ -400,24 +331,19 @@ export default function TareasPage() {
               padding: "50px"
             }}
           >
-
-            <h3>
-              Cargando tareas...
-            </h3>
-
+            <h3>Cargando tareas...</h3>
           </div>
 
         ) : (
 
           <TareasList
-            tareas={
-              tareasFiltradas
-            }
+            tareas={tareasFiltradas}
+            onRefresh={loadTareas}
           />
 
         )}
 
-        {/* PAGINACION */}
+        {/* PAGINACIÓN */}
 
         <div
           style={{
@@ -431,14 +357,8 @@ export default function TareasPage() {
         >
 
           <button
-            disabled={
-              page === 1
-            }
-            onClick={() =>
-              setPage(
-                prev => prev - 1
-              )
-            }
+            disabled={page === 1}
+            onClick={() => setPage(prev => prev - 1)}
             style={buttonStyle}
           >
             ← Anterior
@@ -449,14 +369,8 @@ export default function TareasPage() {
           </strong>
 
           <button
-            disabled={
-              page === totalPages
-            }
-            onClick={() =>
-              setPage(
-                prev => prev + 1
-              )
-            }
+            disabled={page === totalPages}
+            onClick={() => setPage(prev => prev + 1)}
             style={buttonStyle}
           >
             Siguiente →
@@ -472,50 +386,18 @@ export default function TareasPage() {
 
 }
 
-const cardStyle = {
-
-  background: "#fff",
-
-  borderRadius: "14px",
-
-  padding: "20px",
-
-  boxShadow:
-    "0 2px 10px rgba(0,0,0,0.08)",
-
-  textAlign: "center"
-
-};
-
 const inputStyle = {
-
   padding: "12px",
-
   borderRadius: "10px",
-
-  border:
-    "1px solid #cbd5e1",
-
+  border: "1px solid #cbd5e1",
   fontSize: "14px"
-
 };
 
 const buttonStyle = {
-
-  padding:
-    "10px 18px",
-
-  border: "none",
-
-  borderRadius: "10px",
-
-  background:
-    "#2563eb",
-
-  color: "white",
-
+  padding: "10px 20px",
+  borderRadius: "8px",
+  border: "1px solid #cbd5e1",
+  background: "white",
   cursor: "pointer",
-
-  fontWeight: "bold"
-
+  fontWeight: "600"
 };

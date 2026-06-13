@@ -3,6 +3,8 @@ import {
   useState
 } from "react";
 
+import "../styles/dashboardPage.css";
+
 import MainLayout
   from "../layouts/MainLayout";
 
@@ -48,9 +50,7 @@ export default function DashboardPage() {
 
     } finally {
 
-      setLoading(
-        false
-      );
+      setLoading(false);
 
     }
 
@@ -62,13 +62,10 @@ export default function DashboardPage() {
 
       <MainLayout>
 
-        <div
-          style={{
-            textAlign: "center",
-            padding: "50px"
-          }}
-        >
+        <div className="dashboard-loading">
+
           Cargando dashboard...
+
         </div>
 
       </MainLayout>
@@ -81,45 +78,23 @@ export default function DashboardPage() {
 
     <MainLayout>
 
-      {/* HEADER */}
+      <div className="dashboard-header">
 
-      <div
-        style={{
-          marginBottom: "35px"
-        }}
-      >
+        <h1 className="dashboard-title">
 
-        <h1
-          style={{
-            marginBottom: "8px",
-            color: "#111827"
-          }}
-        >
           📊 Dashboard Administrativo
+
         </h1>
 
-        <p
-          style={{
-            margin: 0,
-            color: "#6b7280"
-          }}
-        >
+        <p className="dashboard-subtitle">
+
           Resumen general del sistema y métricas principales.
+
         </p>
 
       </div>
 
-      {/* KPIs */}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(250px,1fr))",
-          gap: "20px",
-          marginBottom: "40px"
-        }}
-      >
+      <div className="dashboard-kpis">
 
         <StatCard
           title="Proyectos"
@@ -144,30 +119,15 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* ESTADOS */}
+      <section className="dashboard-section">
 
-      <div
-        style={{
-          marginBottom: "40px"
-        }}
-      >
+        <h2 className="dashboard-section-title">
 
-        <h2
-          style={{
-            marginBottom: "20px"
-          }}
-        >
           📌 Tareas por Estado
+
         </h2>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(180px,1fr))",
-            gap: "15px"
-          }}
-        >
+        <div className="dashboard-states-grid">
 
           {
 
@@ -180,42 +140,19 @@ export default function DashboardPage() {
 
                 <div
                   key={estado}
-                  style={{
-                    backgroundColor:
-                      "#fff",
-                    border:
-                      "1px solid #e5e7eb",
-                    borderRadius:
-                      "14px",
-                    padding:
-                      "20px",
-                    boxShadow:
-                      "0 2px 8px rgba(0,0,0,0.05)"
-                  }}
+                  className="dashboard-state-card"
                 >
 
-                  <div
-                    style={{
-                      color:
-                        "#6b7280",
-                      marginBottom:
-                        "10px"
-                    }}
-                  >
+                  <div className="dashboard-state-name">
+
                     {estado}
+
                   </div>
 
-                  <div
-                    style={{
-                      fontSize:
-                        "2rem",
-                      fontWeight:
-                        "700",
-                      color:
-                        "#2563eb"
-                    }}
-                  >
+                  <div className="dashboard-state-value">
+
                     {cantidad}
+
                   </div>
 
                 </div>
@@ -228,34 +165,11 @@ export default function DashboardPage() {
 
         </div>
 
-      </div>
+      </section>
 
-      {/* VENCIDAS Y CRITICAS */}
+      <div className="dashboard-alerts-grid">
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(350px,1fr))",
-          gap: "20px",
-          marginBottom: "40px"
-        }}
-      >
-
-        {/* VENCIDAS */}
-
-        <div
-          style={{
-            backgroundColor:
-              "#fff7ed",
-            border:
-              "1px solid #fdba74",
-            borderRadius:
-              "16px",
-            padding:
-              "25px"
-          }}
-        >
+        <div className="dashboard-alert-card dashboard-overdue">
 
           <h2>
 
@@ -266,13 +180,19 @@ export default function DashboardPage() {
           <p>
 
             Total:
+
             {" "}
+
             <strong>
+
               {
+
                 stats
                   .tareasVencidas
                   .cantidad
+
               }
+
             </strong>
 
           </p>
@@ -287,7 +207,9 @@ export default function DashboardPage() {
               ? (
 
                 <p>
+
                   No hay tareas vencidas.
+
                 </p>
 
               )
@@ -302,25 +224,20 @@ export default function DashboardPage() {
                     tarea => (
 
                       <div
-                        key={
-                          tarea.id
-                        }
-                        style={{
-                          padding:
-                            "10px 0",
-                          borderBottom:
-                            "1px solid rgba(0,0,0,0.08)"
-                        }}
+                        key={tarea.id}
+                        className="dashboard-task-row"
                       >
 
                         <strong>
+
                           {tarea.titulo}
+
                         </strong>
 
-                        <br />
-
                         <small>
+
                           👤 {tarea.responsable}
+
                         </small>
 
                       </div>
@@ -335,20 +252,7 @@ export default function DashboardPage() {
 
         </div>
 
-        {/* CRITICAS */}
-
-        <div
-          style={{
-            backgroundColor:
-              "#fef2f2",
-            border:
-              "1px solid #fca5a5",
-            borderRadius:
-              "16px",
-            padding:
-              "25px"
-          }}
-        >
+        <div className="dashboard-alert-card dashboard-critical">
 
           <h2>
 
@@ -359,13 +263,19 @@ export default function DashboardPage() {
           <p>
 
             Total:
+
             {" "}
+
             <strong>
+
               {
+
                 stats
                   .tareasCriticas
                   .cantidad
+
               }
+
             </strong>
 
           </p>
@@ -380,7 +290,9 @@ export default function DashboardPage() {
               ? (
 
                 <p>
+
                   No hay tareas críticas.
+
                 </p>
 
               )
@@ -395,25 +307,20 @@ export default function DashboardPage() {
                     tarea => (
 
                       <div
-                        key={
-                          tarea.id
-                        }
-                        style={{
-                          padding:
-                            "10px 0",
-                          borderBottom:
-                            "1px solid rgba(0,0,0,0.08)"
-                        }}
+                        key={tarea.id}
+                        className="dashboard-task-row"
                       >
 
                         <strong>
+
                           {tarea.titulo}
+
                         </strong>
 
-                        <br />
-
                         <small>
+
                           👤 {tarea.responsable}
+
                         </small>
 
                       </div>
@@ -430,36 +337,18 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* RESPONSABLES */}
+      <div className="dashboard-responsables">
 
-      <div
-        style={{
-          backgroundColor:
-            "#fff",
-          border:
-            "1px solid #e5e7eb",
-          borderRadius:
-            "16px",
-          padding:
-            "25px",
-          boxShadow:
-            "0 2px 8px rgba(0,0,0,0.05)"
-        }}
-      >
+        <h2>
 
-        <h2
-          style={{
-            marginTop: 0
-          }}
-        >
           🏆 Tareas por Responsable
+
         </h2>
 
         {
 
           Object.entries(
-            stats
-              .tareasPorResponsable
+            stats.tareasPorResponsable
           ).map(
 
             ([nombre,
@@ -467,23 +356,19 @@ export default function DashboardPage() {
 
               <div
                 key={nombre}
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    "space-between",
-                  padding:
-                    "12px 0",
-                  borderBottom:
-                    "1px solid #f3f4f6"
-                }}
+                className="dashboard-responsable-row"
               >
 
                 <span>
+
                   {nombre}
+
                 </span>
 
                 <strong>
+
                   {cantidad}
+
                 </strong>
 
               </div>

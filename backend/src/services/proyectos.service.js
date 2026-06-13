@@ -223,7 +223,7 @@ async function create(data) {
 
   }
 
-  return await Proyecto.create({
+  const proyecto = await Proyecto.create({
 
     codigo:
       data.codigo,
@@ -237,6 +237,29 @@ async function create(data) {
     estado:
       "activo"
 
+  });
+
+  // Si se enviaron integrantes, asociarlos
+  if (
+    Array.isArray(data.integrantes) &&
+    data.integrantes.length > 0
+  ) {
+
+    const usuariosValidos =
+      await Usuario.findAll({
+        where: {
+          id: data.integrantes,
+          activo: true
+        }
+      });
+
+    await proyecto.addUsuarios(usuariosValidos);
+
+  }
+
+  // Retornar con integrantes incluidos
+  return Proyecto.findByPk(proyecto.id, {
+    include: [Usuario, Tarea]
   });
 
 }
@@ -289,6 +312,47 @@ async function update(id, data) {
   await proyecto.save();
 
   return proyecto;
+
+}
+
+// Reemplaza TODOS los integrantes del proyecto
+async function setIntegrantes(id, integrantesIds) {
+
+  const proyecto =
+    await Proyecto.findByPk(id);
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  if (!Array.isArray(integrantesIds)) {
+
+    throw new AppError(
+      "integrantes debe ser un array de IDs",
+      400
+    );
+
+  }
+
+  const usuariosValidos =
+    await Usuario.findAll({
+      where: {
+        id: integrantesIds,
+        activo: true
+      }
+    });
+
+  // setUsuarios reemplaza todos los integrantes de una vez
+  await proyecto.setUsuarios(usuariosValidos);
+
+  return Proyecto.findByPk(id, {
+    include: [Usuario, Tarea]
+  });
 
 }
 
@@ -350,6 +414,8 @@ module.exports = {
 
   reactivar,
 
-  finalizar
+  finalizar,
+
+  setIntegrantes
 
 };

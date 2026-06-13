@@ -32,5 +32,4 @@ router.get(
   controller.getById
 );
 
-module.exports =
-  router;
+module.exports = router;

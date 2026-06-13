@@ -1,6 +1,7 @@
+// TareasList.jsx
 import TareaCard from "./TareaCard";
 
-export default function TareasList({ tareas }) {
+export default function TareasList({ tareas, onRefresh }) {
 
   if (!tareas || tareas.length === 0) {
 
@@ -31,6 +32,7 @@ export default function TareasList({ tareas }) {
         <TareaCard
           key={tarea.id}
           tarea={tarea}
+          onRefresh={onRefresh}
         />
 
       ))}

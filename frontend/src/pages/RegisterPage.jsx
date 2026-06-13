@@ -1,50 +1,81 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState }
+  from "react";
 
-import { register } from "../api/auth.service";
+import {
+  useNavigate,
+  Link
+} from "react-router-dom";
+
+import {
+  register
+} from "../api/auth.service";
+
+import "../styles/auth.css";
 
 export default function RegisterPage() {
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [form, setForm] = useState({
-    nombre: "",
-    email: "",
-    password: "",
-  });
+  const [form,
+    setForm] =
+    useState({
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+      nombre: "",
 
-  const handleChange = (e) => {
+      email: "",
 
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
+      password: ""
+
     });
 
-  };
+  const [error,
+    setError] =
+    useState("");
 
-  const handleSubmit = async (e) => {
+  const [loading,
+    setLoading] =
+    useState(false);
+
+  function handleChange(e) {
+
+    setForm({
+
+      ...form,
+
+      [e.target.name]:
+        e.target.value
+
+    });
+
+  }
+
+  async function handleSubmit(e) {
 
     e.preventDefault();
 
     setError("");
+
     setLoading(true);
 
     try {
 
       await register(form);
 
-      alert("Usuario registrado correctamente");
+      alert(
+        "Usuario registrado correctamente"
+      );
 
       navigate("/login");
 
     } catch (err) {
 
       setError(
+
         err.response?.data?.error ||
+
         "Error al registrar usuario"
+
       );
 
     } finally {
@@ -53,220 +84,139 @@ export default function RegisterPage() {
 
     }
 
-  };
+  }
 
   return (
 
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background:
-          "linear-gradient(135deg, #1e293b, #0f172a)",
-        padding: "20px",
-      }}
-    >
+    <div className="auth-page">
 
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "450px",
-          background: "#fff",
-          borderRadius: "16px",
-          padding: "40px",
-          boxShadow:
-            "0 20px 40px rgba(0,0,0,0.25)",
-        }}
-      >
+      <div className="auth-card">
 
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "30px",
-          }}
+        <h1 className="auth-title">
+
+          Crear Cuenta
+
+        </h1>
+
+        <p className="auth-subtitle">
+
+          Registrate para comenzar a utilizar el sistema
+
+        </p>
+
+        <form
+          onSubmit={handleSubmit}
         >
 
-          <h1
-            style={{
-              margin: 0,
-              color: "#1e293b",
-              fontSize: "2rem",
-            }}
-          >
-            Crear Cuenta
-          </h1>
+          <div className="form-group">
 
-          <p
-            style={{
-              color: "#64748b",
-              marginTop: "10px",
-            }}
-          >
-            Registrate para comenzar a utilizar el sistema
-          </p>
+            <label htmlFor="nombre">
 
-        </div>
-
-        <form onSubmit={handleSubmit}>
-
-          <div style={{ marginBottom: "16px" }}>
-
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
               Nombre
+
             </label>
 
             <input
+              id="nombre"
               type="text"
               name="nombre"
               value={form.nombre}
               onChange={handleChange}
-              required
               placeholder="Juan Pérez"
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "1rem",
-                boxSizing: "border-box",
-              }}
+              required
             />
 
           </div>
 
-          <div style={{ marginBottom: "16px" }}>
+          <div className="form-group">
 
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
+            <label htmlFor="email">
+
               Email
+
             </label>
 
             <input
+              id="email"
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              required
               placeholder="usuario@email.com"
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "1rem",
-                boxSizing: "border-box",
-              }}
+              required
             />
 
           </div>
 
-          <div style={{ marginBottom: "20px" }}>
+          <div className="form-group">
 
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
+            <label htmlFor="password">
+
               Contraseña
+
             </label>
 
             <input
+              id="password"
               type="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              required
               placeholder="********"
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #cbd5e1",
-                fontSize: "1rem",
-                boxSizing: "border-box",
-              }}
+              required
             />
 
           </div>
 
           {
+
             error && (
 
-              <div
-                style={{
-                  background: "#fee2e2",
-                  color: "#b91c1c",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  marginBottom: "20px",
-                }}
-              >
+              <div className="auth-error">
+
                 {error}
+
               </div>
 
             )
+
           }
 
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: "100%",
-              padding: "14px",
-              border: "none",
-              borderRadius: "8px",
-              background: "#2563eb",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer",
-              fontSize: "1rem",
-            }}
+            className="btn btn-primary auth-submit"
           >
+
             {
+
               loading
+
                 ? "Registrando..."
+
                 : "Crear Cuenta"
+
             }
+
           </button>
 
         </form>
 
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "20px",
-            color: "#64748b",
-          }}
-        >
+        <div className="auth-footer">
 
-          ¿Ya tenés cuenta?
+          <span>
 
-          {" "}
+            ¿Ya tenés cuenta?
+
+          </span>
 
           <Link
             to="/login"
-            style={{
-              color: "#2563eb",
-              textDecoration: "none",
-              fontWeight: "bold",
-            }}
+            className="auth-link-button"
           >
+
             Iniciar sesión
+
           </Link>
 
         </div>

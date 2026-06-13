@@ -1,0 +1,59 @@
+.tarea-detalle-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tarea-detalle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tarea-detalle-id {
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.tarea-detalle-title {
+  margin: 5px 0;
+  color: #111827;
+}
+
+.tarea-detalle-badges {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tarea-detalle-description {
+  margin-bottom: 20px;
+}
+
+.tarea-detalle-description p {
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.tarea-detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.tarea-detalle-card h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.tarea-detalle-card p {
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.tarea-detalle-card p:last-child {
+  margin-bottom: 0;
+}

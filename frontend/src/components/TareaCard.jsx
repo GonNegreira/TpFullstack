@@ -1,159 +1,227 @@
-import { Link } from "react-router-dom";
+import { Link }
+  from "react-router-dom";
 
 import { useAuth }
-    from "../context/AuthContext";
+  from "../context/AuthContext";
 
 import EstadoBadge
-    from "./EstadoBadge";
+  from "./EstadoBadge";
 
 import PrioridadBadge
-    from "./PrioridadBadge";
+  from "./PrioridadBadge";
 
-export default function TareaCard({ tarea }) {
+import {
+  iniciarTarea,
+  bloquearTarea,
+  cancelarTarea,
+  finalizarTarea
+} from "../api/tareas.service";
 
-    const { user } =
-        useAuth();
-    return (
+import "../styles/tarea-card.css";
 
-        <div
-            style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                padding: "18px",
-                border: "5px solid #e5e7eb",
-                boxShadow:
-                    "0 2px 8px rgba(0,0,0,0.08)",
-                display: "flex",
-                flexDirection: "column"
-            }}
-        >
+export default function TareaCard({
+  tarea,
+  onRefresh
+}) {
 
-            <div
-                style={{
-                    marginBottom: "15px"
-                }}
-            >
+  const { user } =
+    useAuth();
 
-                <div
-                    style={{
-                        fontSize: "0.75rem",
-                        fontWeight: "bold",
-                        color: "#2563eb",
-                        textTransform: "uppercase",
-                        marginBottom: "6px"
-                    }}
-                >
-                    Tarea #{tarea.id}
-                </div>
+  const esAdminOLider =
+    user?.rol === "admin" ||
+    user?.rol === "lider";
 
-                <h3
-                    style={{
-                        margin: 0,
-                        color: "#111827",
-                        fontSize: "1.4rem",
-                        fontWeight: "700",
-                        lineHeight: "1.3"
-                    }}
-                >
-                    {tarea.titulo}
-                </h3>
+  const esColaboradorResponsable =
+    user?.rol === "colaborador" &&
+    user?.id === tarea.responsableId;
 
-            </div>
+  async function handleAccion(accionFn) {
+    try {
+      await accionFn(tarea.id);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+        "Error al cambiar estado"
+      );
+    }
+  }
 
-            <div
-                style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    marginBottom: "15px"
-                }}
-            >
+  return (
 
-                <EstadoBadge
-                    estado={tarea.estado}
-                />
+    <div className="tarea-card">
 
-                <PrioridadBadge
-                    prioridad={tarea.prioridad}
-                />
+      <div className="tarea-card-header">
 
-            </div>
+        <div className="tarea-card-id">
 
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                    fontSize: "0.9rem",
-                    color: "#666",
-                    marginBottom: "15px"
-                }}
-            >
+          Tarea #{tarea.id}
 
-                <span>
-                    📁 {tarea.Proyecto?.nombre}
-                </span>
-
-                <span>
-                    ⏳ Límite:
-                    {" "}
-                    {new Date(
-                        tarea.fechaLimite
-                    ).toLocaleDateString()}
-                </span>
-
-            </div>
-
-            <div
-                style={{
-                    display: "flex",
-                    gap: "10px"
-                }}
-            >
-
-                <Link
-                    to={`/tareas/${tarea.id}`}
-                    style={{
-                        flex: 1,
-                        textDecoration: "none",
-                        padding: "10px",
-                        textAlign: "center",
-                        borderRadius: "8px",
-                        backgroundColor: "#2563eb",
-                        color: "white",
-                        fontWeight: "bold"
-                    }}
-                >
-                    Ver detalle
-                </Link>
-
-                {
-
-                    user?.rol === "admin" && (
-
-                        <Link
-                            to={`/tareas/${tarea.id}/editar`}
-                            style={{
-                                flex: 1,
-                                textDecoration: "none",
-                                padding: "10px",
-                                textAlign: "center",
-                                borderRadius: "8px",
-                                backgroundColor: "#ce8506",
-                                color: "white",
-                                fontWeight: "bold"
-                            }}
-                        >
-                            Editar
-                        </Link>
-
-                    )
-
-                }
-
-            </div>
         </div>
 
-    );
+        <h3 className="tarea-card-title">
+
+          {tarea.titulo}
+
+        </h3>
+
+      </div>
+
+      <div className="tarea-card-badges">
+
+        <EstadoBadge
+          estado={tarea.estado}
+        />
+
+        <PrioridadBadge
+          prioridad={tarea.prioridad}
+        />
+
+      </div>
+
+      <div className="tarea-card-info">
+
+        <span>
+
+          📁 {tarea.Proyecto?.nombre}
+
+        </span>
+
+        <span>
+
+          ⏳ Límite:{" "}
+
+          {
+            new Date(
+              tarea.fechaLimite
+            ).toLocaleDateString()
+          }
+
+        </span>
+
+      </div>
+
+      {/* BOTONES DE ACCIÓN DE ESTADO */}
+
+      {tarea.estado !== "finalizada" &&
+       tarea.estado !== "cancelada" && (
+
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+            marginBottom: "12px"
+          }}
+        >
+
+          {/* Iniciar: admin/lider/colaborador responsable, solo si pendiente */}
+          {(esAdminOLider || esColaboradorResponsable) &&
+           tarea.estado === "pendiente" && (
+
+            <button
+              onClick={() => handleAccion(iniciarTarea)}
+              style={accionBtnStyle("#2563eb")}
+            >
+              ▶ Iniciar
+            </button>
+
+          )}
+
+          {/* Bloquear: admin/lider/colaborador responsable, solo si en_progreso */}
+          {(esAdminOLider || esColaboradorResponsable) &&
+           tarea.estado === "en_progreso" && (
+
+            <button
+              onClick={() => handleAccion(bloquearTarea)}
+              style={accionBtnStyle("#d97706")}
+            >
+              ⏸ Bloquear
+            </button>
+
+          )}
+
+          {/* Reanudar: admin/lider/colaborador responsable, solo si bloqueada */}
+          {(esAdminOLider || esColaboradorResponsable) &&
+           tarea.estado === "bloqueada" && (
+
+            <button
+              onClick={() => handleAccion(iniciarTarea)}
+              style={accionBtnStyle("#2563eb")}
+            >
+              ▶ Reanudar
+            </button>
+
+          )}
+
+          {/* Finalizar y Cancelar: solo admin/lider */}
+          {esAdminOLider && (
+
+            <>
+
+              {tarea.estado === "en_progreso" && (
+
+                <button
+                  onClick={() => handleAccion(finalizarTarea)}
+                  style={accionBtnStyle("#16a34a")}
+                >
+                  ✅ Finalizar
+                </button>
+
+              )}
+
+              <button
+                onClick={() => handleAccion(cancelarTarea)}
+                style={accionBtnStyle("#6b7280")}
+              >
+                ⛔ Cancelar
+              </button>
+
+            </>
+
+          )}
+
+        </div>
+
+      )}
+
+      {/* BOTONES DE NAVEGACIÓN */}
+
+      <div className="tarea-card-actions">
+
+        <Link
+          to={`/tareas/${tarea.id}`}
+          className="tarea-card-btn tarea-card-btn-primary"
+        >
+          Ver detalle
+        </Link>
+
+        {esAdminOLider && (
+
+          <Link
+            to={`/tareas/${tarea.id}/editar`}
+            className="tarea-card-btn tarea-card-btn-warning"
+          >
+            Editar
+          </Link>
+
+        )}
+
+      </div>
+
+    </div>
+
+  );
 
 }
+
+const accionBtnStyle = (color) => ({
+  backgroundColor: color,
+  color: "white",
+  border: "none",
+  padding: "6px 12px",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontSize: "0.8rem",
+  fontWeight: "600"
+});

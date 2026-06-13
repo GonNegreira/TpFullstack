@@ -15,11 +15,19 @@ async function startServer() {
 
     console.log("Base de datos conectada");
 
-    await sequelize.sync({force: true});
+    await sequelize.sync({ alter: false });
 
     console.log("Modelos sincronizados");
 
-    await seedDatabase();
+    const { Usuario } = require("./models");
+    const count = await Usuario.count();
+
+    if (count === 0) {
+      console.log("Base de datos vacía, cargando semillas...");
+      await seedDatabase();
+    } else {
+      console.log("Datos existentes encontrados, omitiendo semillas.");
+    }
 
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en puerto ${PORT}`);
@@ -28,8 +36,6 @@ async function startServer() {
   } catch (error) {
     console.error(error);
   }
-
-  
 }
 
 startServer();

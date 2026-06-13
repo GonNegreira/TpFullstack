@@ -22,13 +22,14 @@ import {
   getUsuarios
 } from "../api/usuarios.service";
 
+import "../styles/TareaFormPage.css";
+
 export default function TareaFormPage() {
 
   const navigate =
     useNavigate();
 
-  const [titulo,
-    setTitulo] =
+  const [titulo, setTitulo] =
     useState("");
 
   const [descripcion,
@@ -135,11 +136,8 @@ export default function TareaFormPage() {
       console.error(error);
 
       alert(
-
         error.response?.data?.error ||
-
         "Error al crear tarea"
-
       );
 
     }
@@ -162,94 +160,31 @@ export default function TareaFormPage() {
 
   }
 
-  const inputStyle = {
-
-    width: "100%",
-
-    padding: "12px",
-
-    borderRadius: "8px",
-
-    border: "1px solid #d1d5db",
-
-    fontSize: "1rem",
-
-    boxSizing: "border-box"
-
-  };
-
-  const labelStyle = {
-
-    display: "block",
-
-    marginBottom: "6px",
-
-    fontWeight: "600",
-
-    color: "#374151"
-
-  };
-
   return (
 
     <MainLayout>
 
-      <div
-        style={{
-          maxWidth: "850px",
-          margin: "0 auto"
-        }}
-      >
+      <div className="tarea-form-container">
 
-        <div
-          style={{
-            marginBottom: "25px"
-          }}
-        >
+        <div className="tarea-form-header">
 
-          <h1
-            style={{
-              marginBottom: "5px"
-            }}
-          >
+          <h1>
             Nueva Tarea
           </h1>
 
-          <p
-            style={{
-              color: "#6b7280"
-            }}
-          >
+          <p>
             Complete los datos para crear una nueva tarea.
           </p>
 
         </div>
 
-        <div
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: "14px",
-            padding: "30px",
-            border: "1px solid #e5e7eb",
-            boxShadow:
-              "0 4px 12px rgba(0,0,0,0.06)"
-          }}
-        >
+        <div className="tarea-form-card">
 
-          <form
-            onSubmit={handleSubmit}
-          >
+          <form onSubmit={handleSubmit}>
 
-            <div
-              style={{
-                marginBottom: "20px"
-              }}
-            >
+            <div className="form-group">
 
-              <label
-                htmlFor="titulo"
-                style={labelStyle}
-              >
+              <label htmlFor="titulo">
                 Título
               </label>
 
@@ -262,21 +197,13 @@ export default function TareaFormPage() {
                   )
                 }
                 required
-                style={inputStyle}
               />
 
             </div>
 
-            <div
-              style={{
-                marginBottom: "20px"
-              }}
-            >
+            <div className="form-group">
 
-              <label
-                htmlFor="descripcion"
-                style={labelStyle}
-              >
+              <label htmlFor="descripcion">
                 Descripción
               </label>
 
@@ -290,30 +217,15 @@ export default function TareaFormPage() {
                   )
                 }
                 required
-                style={{
-                  ...inputStyle,
-                  resize: "vertical"
-                }}
               />
 
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(250px,1fr))",
-                gap: "20px",
-                marginBottom: "20px"
-              }}
-            >
+            <div className="form-grid">
 
-              <div>
+              <div className="form-group">
 
-                <label
-                  htmlFor="prioridad"
-                  style={labelStyle}
-                >
+                <label htmlFor="prioridad">
                   Prioridad
                 </label>
 
@@ -325,7 +237,6 @@ export default function TareaFormPage() {
                       e.target.value
                     )
                   }
-                  style={inputStyle}
                 >
 
                   <option value="baja">
@@ -348,12 +259,9 @@ export default function TareaFormPage() {
 
               </div>
 
-              <div>
+              <div className="form-group">
 
-                <label
-                  htmlFor="fechaLimite"
-                  style={labelStyle}
-                >
+                <label htmlFor="fechaLimite">
                   Fecha límite
                 </label>
 
@@ -367,29 +275,17 @@ export default function TareaFormPage() {
                     )
                   }
                   required
-                  style={inputStyle}
                 />
 
               </div>
 
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(250px,1fr))",
-                gap: "20px",
-                marginBottom: "30px"
-              }}
-            >
+            <div className="form-grid">
 
-              <div>
+              <div className="form-group">
 
-                <label
-                  htmlFor="proyecto"
-                  style={labelStyle}
-                >
+                <label htmlFor="proyecto">
                   Proyecto
                 </label>
 
@@ -402,7 +298,6 @@ export default function TareaFormPage() {
                     )
                   }
                   required
-                  style={inputStyle}
                 >
 
                   <option value="">
@@ -415,16 +310,10 @@ export default function TareaFormPage() {
                       proyecto => (
 
                         <option
-                          key={
-                            proyecto.id
-                          }
-                          value={
-                            proyecto.id
-                          }
+                          key={proyecto.id}
+                          value={proyecto.id}
                         >
-
                           {proyecto.nombre}
-
                         </option>
 
                       )
@@ -436,12 +325,9 @@ export default function TareaFormPage() {
 
               </div>
 
-              <div>
+              <div className="form-group">
 
-                <label
-                  htmlFor="responsable"
-                  style={labelStyle}
-                >
+                <label htmlFor="responsable">
                   Responsable
                 </label>
 
@@ -454,7 +340,6 @@ export default function TareaFormPage() {
                     )
                   }
                   required
-                  style={inputStyle}
                 >
 
                   <option value="">
@@ -467,19 +352,13 @@ export default function TareaFormPage() {
                       usuario => (
 
                         <option
-                          key={
-                            usuario.id
-                          }
-                          value={
-                            usuario.id
-                          }
+                          key={usuario.id}
+                          value={usuario.id}
                         >
 
                           {usuario.nombre}
                           {" "}
-                          (
-                          {usuario.rol}
-                          )
+                          ({usuario.rol})
 
                         </option>
 
@@ -494,53 +373,21 @@ export default function TareaFormPage() {
 
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "10px"
-              }}
-            >
+            <div className="form-actions">
 
               <button
                 type="button"
+                className="btn-secondary"
                 onClick={() =>
-                  navigate(
-                    "/tareas"
-                  )
+                  navigate("/tareas")
                 }
-                style={{
-                  padding:
-                    "12px 18px",
-                  border:
-                    "1px solid #d1d5db",
-                  borderRadius:
-                    "8px",
-                  cursor:
-                    "pointer",
-                  backgroundColor:
-                    "#fff"
-                }}
               >
                 Cancelar
               </button>
 
               <button
                 type="submit"
-                style={{
-                  padding:
-                    "12px 18px",
-                  border: "none",
-                  borderRadius:
-                    "8px",
-                  cursor:
-                    "pointer",
-                  backgroundColor:
-                    "#2563eb",
-                  color: "white",
-                  fontWeight:
-                    "600"
-                }}
+                className="btn-primary"
               >
                 Crear tarea
               </button>

@@ -34,6 +34,10 @@ export function createTarea(
 
 }
 
+export function getHistorialTarea(id) {
+  return api.get(`/tareas/${id}/historial`);
+}
+
 export function updateTarea(
   id,
   data
@@ -46,3 +50,15 @@ export function updateTarea(
 
 }
 
+export function iniciarTarea(id) {
+  return api.patch(`/tareas/${id}/iniciar`);
+}
+export function bloquearTarea(id) {
+  return api.patch(`/tareas/${id}/bloquear`);
+}
+export function cancelarTarea(id) {
+  return api.patch(`/tareas/${id}/cancelar`);
+}
+export function finalizarTarea(id) {
+  return api.patch(`/tareas/${id}/finalizar`);
+}

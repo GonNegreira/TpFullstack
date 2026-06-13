@@ -114,7 +114,7 @@ function App() {
             }
           />
           <Route
-            path="/dashboard"
+            path="/tareas/resumen"
             element={
 
               <AdminRoute>

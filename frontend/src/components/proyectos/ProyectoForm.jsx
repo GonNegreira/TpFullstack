@@ -1,89 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import { getUsuarios } from "../../api/usuarios.service";
+
+import "../../styles/forms.css";
+import "../../styles/buttons.css";
 
 export default function ProyectoForm({
   initialData,
-  onSubmit
+  onSubmit,
+  // Si es edición, ocultamos "Estado" porque se maneja con botones separados
+  modoEdicion = false
 }) {
 
-  const [form,
-    setForm] = useState({
-
-    codigo:
-      initialData?.codigo || "",
-
-    nombre:
-      initialData?.nombre || "",
-
-    descripcion:
-      initialData?.descripcion || "",
-
-    estado:
-      initialData?.estado || "activo"
-
+  const [form, setForm] = useState({
+    codigo: initialData?.codigo || "",
+    nombre: initialData?.nombre || "",
+    descripcion: initialData?.descripcion || "",
+    estado: initialData?.estado || "activo",
+    integrantes: initialData?.Usuarios?.map(u => u.id) || []
   });
 
+  const [usuarios, setUsuarios] = useState([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(true);
+
+  useEffect(() => {
+    loadUsuarios();
+  }, []);
+
+  async function loadUsuarios() {
+    try {
+      const response = await getUsuarios();
+      console.log("URL base:", response.config.url);        // ← qué URL usó
+      console.log("Request URL:", response.request.responseURL); // ← URL final
+      console.log("DATOS:", response.data);
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error("Error al cargar usuarios:", error);
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  }
+
   function handleChange(e) {
-
     setForm({
-
       ...form,
-
-      [e.target.name]:
-        e.target.value
-
+      [e.target.name]: e.target.value
     });
+  }
 
+  function handleToggleIntegrante(usuarioId) {
+    const yaEsta = form.integrantes.includes(usuarioId);
+    setForm({
+      ...form,
+      integrantes: yaEsta
+        ? form.integrantes.filter(id => id !== usuarioId)
+        : [...form.integrantes, usuarioId]
+    });
   }
 
   function handleSubmit(e) {
-
     e.preventDefault();
-
     onSubmit(form);
-
   }
 
-  const inputStyle = {
-
-    width: "100%",
-    padding: "12px",
-    borderRadius: "10px",
-    border: "1px solid #d1d5db",
-    fontSize: "0.95rem",
-    boxSizing: "border-box",
-    marginTop: "6px"
-
-  };
-
-  const labelStyle = {
-
-    display: "block",
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: "4px"
-
+  const ROL_LABELS = {
+    admin: "👑 Admin",
+    lider: "🔷 Líder",
+    colaborador: "👤 Colaborador"
   };
 
   return (
+    <form onSubmit={handleSubmit} className="form-container">
 
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "22px"
-      }}
-    >
-
-      <div>
-
-        <label
-          htmlFor="codigo"
-          style={labelStyle}
-        >
+      {/* CÓDIGO */}
+      <div className="form-group">
+        <label htmlFor="codigo" className="form-label">
           Código del Proyecto
         </label>
-
         <input
           id="codigo"
           name="codigo"
@@ -91,20 +84,15 @@ export default function ProyectoForm({
           onChange={handleChange}
           required
           placeholder="Ej: DDS-005"
-          style={inputStyle}
+          className="form-input"
         />
-
       </div>
 
-      <div>
-
-        <label
-          htmlFor="nombre"
-          style={labelStyle}
-        >
+      {/* NOMBRE */}
+      <div className="form-group">
+        <label htmlFor="nombre" className="form-label">
           Nombre
         </label>
-
         <input
           id="nombre"
           name="nombre"
@@ -112,105 +100,135 @@ export default function ProyectoForm({
           onChange={handleChange}
           required
           placeholder="Ej: Sistema de Ventas"
-          style={inputStyle}
+          className="form-input"
         />
-
       </div>
 
-      <div>
-
-        <label
-          htmlFor="descripcion"
-          style={labelStyle}
-        >
+      {/* DESCRIPCIÓN */}
+      <div className="form-group">
+        <label htmlFor="descripcion" className="form-label">
           Descripción
         </label>
-
         <textarea
           id="descripcion"
           name="descripcion"
           value={form.descripcion}
           onChange={handleChange}
           required
-          rows={5}
+          rows={4}
           placeholder="Describe brevemente el objetivo del proyecto..."
-          style={{
-            ...inputStyle,
-            resize: "vertical"
-          }}
+          className="form-textarea"
         />
-
       </div>
 
-      <div>
+      {/* ESTADO — solo en edición */}
+      {modoEdicion && (
+        <div className="form-group">
+          <label htmlFor="estado" className="form-label">
+            Estado Actual
+          </label>
+          <select
+            id="estado"
+            name="estado"
+            value={form.estado}
+            onChange={handleChange}
+            className="form-select"
+          >
+            <option value="activo">🟢 Activo</option>
+            <option value="pausado">🟡 Pausado</option>
+            <option value="finalizado">🔵 Finalizado</option>
+          </select>
+        </div>
+      )}
 
-        <label
-          htmlFor="estado"
-          style={labelStyle}
-        >
-          Estado Inicial
+      {/* EQUIPO */}
+      <div className="form-group">
+        <label className="form-label">
+          Equipo del Proyecto
         </label>
+        <small style={{ color: "#6b7280", marginBottom: "10px", display: "block" }}>
+          Seleccioná los usuarios que pueden ser responsables de tareas en este proyecto.
+        </small>
 
-        <select
-          id="estado"
-          name="estado"
-          value={form.estado}
-          onChange={handleChange}
-          style={{
-            ...inputStyle,
-            cursor: "pointer",
-            backgroundColor: "#fff"
-          }}
-        >
+        {loadingUsuarios ? (
+          <p style={{ color: "#9ca3af" }}>Cargando usuarios...</p>
+        ) : usuarios.length === 0 ? (
+          <p style={{ color: "#9ca3af" }}>No hay usuarios disponibles.</p>
+        ) : (
+          <div
+            style={{
+              border: "1px solid #d1d5db",
+              borderRadius: "8px",
+              overflow: "hidden"
+            }}
+          >
+            {usuarios.map((usuario, index) => {
+              const seleccionado = form.integrantes.includes(usuario.id);
+              return (
+                <div
+                  key={usuario.id}
+                  onClick={() => handleToggleIntegrante(usuario.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 16px",
+                    cursor: "pointer",
+                    backgroundColor: seleccionado ? "#eff6ff" : "white",
+                    borderBottom: index < usuarios.length - 1
+                      ? "1px solid #f3f4f6"
+                      : "none",
+                    transition: "background-color 0.15s"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={seleccionado}
+                    onChange={() => handleToggleIntegrante(usuario.id)}
+                    onClick={e => e.stopPropagation()}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ color: "#111827" }}>
+                      {usuario.nombre}
+                    </strong>
+                    <span style={{ color: "#6b7280", fontSize: "13px", marginLeft: "8px" }}>
+                      {usuario.email}
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      color: seleccionado ? "#2563eb" : "#9ca3af"
+                    }}
+                  >
+                    {ROL_LABELS[usuario.rol] || usuario.rol}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-          <option value="activo">
-            🟢 Activo
-          </option>
-
-          <option value="pausado">
-            🟡 Pausado
-          </option>
-
-          <option value="finalizado">
-            🔵 Finalizado
-          </option>
-
-        </select>
-
+        {form.integrantes.length > 0 && (
+          <small style={{ color: "#2563eb", marginTop: "8px", display: "block" }}>
+            ✓ {form.integrantes.length} integrante{form.integrantes.length !== 1 ? "s" : ""} seleccionado{form.integrantes.length !== 1 ? "s" : ""}
+          </small>
+        )}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginTop: "10px"
-        }}
-      >
-
+      {/* ACCIONES */}
+      <div className="form-actions">
         <button
           type="submit"
-          style={{
-            padding:
-              "12px 24px",
-            border: "none",
-            borderRadius: "10px",
-            backgroundColor:
-              "#2563eb",
-            color: "white",
-            fontWeight: "600",
-            fontSize: "1rem",
-            cursor: "pointer",
-            boxShadow:
-              "0 4px 12px rgba(37,99,235,0.25)"
-          }}
+          className="btn btn-primary"
         >
           💾 Guardar Proyecto
         </button>
-
       </div>
 
     </form>
-
   );
 
 }

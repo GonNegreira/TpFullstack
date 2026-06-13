@@ -13,20 +13,16 @@ import {
 
 export default function ProyectoCreatePage() {
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
   async function handleCreate(data) {
 
     try {
 
-      await createProyecto(
-        data
-      );
+      // data ya incluye { codigo, nombre, descripcion, integrantes[] }
+      await createProyecto(data);
 
-      navigate(
-        "/proyectos"
-      );
+      navigate("/proyectos");
 
     } catch (error) {
 
@@ -43,17 +39,10 @@ export default function ProyectoCreatePage() {
 
     <MainLayout>
 
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto"
-        }}
-      >
+      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
         <button
-          onClick={() =>
-            navigate("/proyectos")
-          }
+          onClick={() => navigate("/proyectos")}
           style={{
             background: "none",
             border: "none",
@@ -66,41 +55,18 @@ export default function ProyectoCreatePage() {
           ← Volver a proyectos
         </button>
 
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "30px"
-          }}
-        >
+        <div style={{ textAlign: "center", marginBottom: "30px" }}>
 
-          <div
-            style={{
-              fontSize: "3rem",
-              marginBottom: "10px"
-            }}
-          >
+          <div style={{ fontSize: "3rem", marginBottom: "10px" }}>
             🚀
           </div>
 
-          <h1
-            style={{
-              margin: 0,
-              color: "#111827",
-              fontSize: "2.2rem"
-            }}
-          >
+          <h1 style={{ margin: 0, color: "#111827", fontSize: "2.2rem" }}>
             Crear Nuevo Proyecto
           </h1>
 
-          <p
-            style={{
-              color: "#6b7280",
-              marginTop: "10px",
-              fontSize: "1rem"
-            }}
-          >
-            Registra un nuevo proyecto dentro del sistema.
-            Luego podrás asignar usuarios y gestionar tareas.
+          <p style={{ color: "#6b7280", marginTop: "10px" }}>
+            Registra un nuevo proyecto y asigná el equipo desde el inicio.
           </p>
 
         </div>
@@ -111,16 +77,11 @@ export default function ProyectoCreatePage() {
             borderRadius: "16px",
             padding: "35px",
             border: "1px solid #e5e7eb",
-            boxShadow:
-              "0 8px 24px rgba(0,0,0,0.08)"
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)"
           }}
         >
 
-          <ProyectoForm
-            onSubmit={
-              handleCreate
-            }
-          />
+          <ProyectoForm onSubmit={handleCreate} />
 
         </div>
 

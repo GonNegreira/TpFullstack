@@ -1,0 +1,6031 @@
+===== ./frontend/src/api/auth.service.js =====
+import api from "./axios";
+
+export const login =
+  (credentials) => {
+
+    return api.post(
+      "/auth/login",
+      credentials
+    );
+
+  };
+
+export const register =
+  (data) => {
+
+    return api.post(
+      "/auth/register",
+      data
+    );
+
+  };
+===== ./frontend/src/api/axios.js =====
+import axios from "axios";
+
+const api = axios.create({
+
+  baseURL:
+    "http://localhost:3000/api"
+
+});
+
+api.interceptors.request.use(
+
+  (config) => {
+
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    if (token) {
+
+      config.headers.Authorization =
+        `Bearer ${token}`;
+
+    }
+
+    return config;
+
+  }
+
+);
+
+export default api;
+===== ./frontend/src/api/dashboard.service.js =====
+import api from "./axios";
+
+export function getDashboard() {
+
+  return api.get(
+    "/dashboard"
+  );
+
+}
+===== ./frontend/src/api/proyectos.service.js =====
+import api from "./axios";
+
+export function getProyectos() {
+
+  return api.get(
+    "/proyectos"
+  );
+
+}
+
+export function getProyecto(id) {
+
+  return api.get(
+    `/proyectos/${id}`
+  );
+
+}
+
+export function createProyecto(data) {
+
+  return api.post(
+    "/proyectos",
+    data
+  );
+
+}
+
+export function updateProyecto(
+  id,
+  data
+) {
+
+  return api.put(
+    `/proyectos/${id}`,
+    data
+  );
+
+}
+
+export function setIntegrantesProyecto(
+  id,
+  integrantes
+) {
+
+  return api.patch(
+    `/proyectos/${id}/integrantes`,
+    { integrantes }
+  );
+
+}
+
+export function deleteProyecto(id) {
+
+  return api.delete(
+    `/proyectos/${id}`
+  );
+
+}
+
+===== ./frontend/src/api/tareas.service.js =====
+import api from "./axios";
+
+export function getTareas(
+  params = {}
+) {
+
+  return api.get(
+    "/tareas",
+    {
+      params
+    }
+  );
+
+}
+
+export function getTarea(
+  id
+) {
+
+  return api.get(
+    `/tareas/${id}`
+  );
+
+}
+
+export function createTarea(
+  data
+) {
+
+  return api.post(
+    "/tareas",
+    data
+  );
+
+}
+
+export function updateTarea(
+  id,
+  data
+) {
+
+  return api.put(
+    `/tareas/${id}`,
+    data
+  );
+
+}
+
+
+===== ./frontend/src/api/usuarios.service.js =====
+import api from "./axios";
+
+export function getUsuarios() {
+  return api.get("/usuarios");
+}
+===== ./frontend/src/App.jsx =====
+import {
+  BrowserRouter,
+  Routes,
+  Route
+} from "react-router-dom";
+
+import {
+  AuthProvider
+} from "./context/AuthContext";
+
+import LoginPage
+  from "./pages/LoginPage";
+
+import RegisterPage
+  from "./pages/RegisterPage";
+
+import TareasPage
+  from "./pages/TareasPage";
+
+import TareaDetallePage
+  from "./pages/TareaDetallePage";
+
+import DashboardPage
+  from "./pages/DashboardPage";
+
+import NotFoundPage
+  from "./pages/NotFoundPage";
+
+import ProtectedRoute
+  from "./routes/ProtectedRoute";
+
+import TareaFormPage
+  from "./pages/TareaFormPage";
+
+import AdminRoute
+  from "./routes/AdminRoute";
+
+import TareaEditPage
+  from "./pages/TareaEditPage";
+
+import ProyectosPage
+  from "./pages/ProyectosPage";
+
+import ProyectoDetallePage
+  from "./pages/ProyectoDetallePage";
+
+import ProyectoCreatePage
+  from "./pages/ProyectoCreatePage";
+
+import ProyectoEditPage
+  from "./pages/ProyectoEditPage";
+
+
+function App() {
+
+  return (
+
+    <AuthProvider>
+
+      <BrowserRouter>
+
+        <Routes>
+
+          <Route
+            path="/login"
+            element={
+              <LoginPage />
+            }
+          />
+
+          <Route
+            path="/register"
+            element={
+              <RegisterPage />
+            }
+          />
+
+          <Route
+            path="/tareas"
+            element={
+              <ProtectedRoute>
+                <TareasPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/tareas/nueva"
+            element={
+              <ProtectedRoute>
+                <TareaFormPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/tareas/:id"
+            element={
+
+              <ProtectedRoute>
+
+                <TareaDetallePage />
+
+              </ProtectedRoute>
+
+            }
+          />
+          <Route
+            path="/tareas/:id/editar"
+            element={
+              <ProtectedRoute>
+                <TareaEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+
+              <AdminRoute>
+
+                <DashboardPage />
+
+              </AdminRoute>
+
+            }
+          />
+
+          <Route
+            path="/proyectos"
+            element={
+              <ProtectedRoute>
+
+                <ProyectosPage />
+
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/proyectos/nuevo"
+            element={
+              <AdminRoute>
+
+                <ProyectoCreatePage />
+
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/proyectos/:id/editar"
+            element={
+              <AdminRoute>
+
+                <ProyectoEditPage />
+
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/proyectos/:id"
+            element={
+              <ProtectedRoute>
+
+                <ProyectoDetallePage />
+
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <NotFoundPage />
+            }
+          />
+
+        </Routes>
+
+      </BrowserRouter>
+
+    </AuthProvider>
+
+  );
+
+}
+
+export default App;
+===== ./frontend/src/components/EstadoBadge.jsx =====
+export default function EstadoBadge({ estado }) {
+
+    const nombres = {
+
+  pendiente: "Pendiente",
+
+  en_progreso: "En progreso",
+
+  bloqueada: "Bloqueada",
+
+  finalizada: "Finalizada",
+
+  cancelada: "Cancelada"
+
+};
+
+  const estilos = {
+
+    pendiente: {
+      backgroundColor: "#facc15",
+      color: "#000"
+    },
+
+    en_progreso: {
+      backgroundColor: "#3b82f6",
+      color: "#fff"
+    },
+
+    bloqueada: {
+      backgroundColor: "#ef4444",
+      color: "#fff"
+    },
+
+    finalizada: {
+      backgroundColor: "#22c55e",
+      color: "#fff"
+    },
+
+    cancelada: {
+      backgroundColor: "#6b7280",
+      color: "#fff"
+    }
+
+  };
+
+  return (
+
+    <span
+      style={{
+        padding: "4px 10px",
+        borderRadius: "20px",
+        fontSize: "0.8rem",
+        fontWeight: "bold",
+        ...estilos[estado]
+      }}
+    >
+
+      {nombres[estado]}
+
+    </span>
+
+  );
+
+}
+===== ./frontend/src/components/Navbar.jsx =====
+import {
+  Link,
+  useNavigate,
+  useLocation
+} from "react-router-dom";
+
+import {
+  useAuth
+} from "../context/AuthContext";
+
+import "../styles/navbar.css";
+
+export default function Navbar() {
+
+  const {
+    user,
+    logout
+  } = useAuth();
+
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
+  function handleLogout() {
+
+    logout();
+
+    navigate("/login");
+
+  }
+
+  function isActive(path) {
+
+    return location.pathname.startsWith(path);
+
+  }
+
+  return (
+
+    <nav className="navbar">
+
+      <div className="navbar-logo">
+
+        <div>
+
+          <div className="navbar-title">
+
+            DDS Tracker
+
+          </div>
+
+          <div className="navbar-subtitle">
+
+            Gestión de Proyectos
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div className="navbar-links">
+
+        <Link
+          to="/tareas"
+          className={
+            isActive("/tareas")
+              ? "nav-link active"
+              : "nav-link"
+          }
+        >
+          📌 Tareas
+        </Link>
+
+        <Link
+          to="/proyectos"
+          className={
+            isActive("/proyectos")
+              ? "nav-link active"
+              : "nav-link"
+          }
+        >
+          📁 Proyectos
+        </Link>
+
+        {
+
+          user?.rol === "admin" && (
+
+            <Link
+              to="/dashboard"
+              className={
+                isActive("/dashboard")
+                  ? "nav-link active"
+                  : "nav-link"
+              }
+            >
+              📊 Dashboard
+            </Link>
+
+          )
+
+        }
+
+      </div>
+
+      <div className="navbar-user">
+
+        {
+
+          user && (
+
+            <div className="user-info">
+
+              <strong>
+
+                {user.nombre}
+
+              </strong>
+
+              <span className="role-badge">
+
+                {user.rol}
+
+              </span>
+
+            </div>
+
+          )
+
+        }
+
+        <button
+          onClick={handleLogout}
+          className="logout-button"
+        >
+
+          Salir
+
+        </button>
+
+      </div>
+
+    </nav>
+
+  );
+
+}
+===== ./frontend/src/components/PrioridadBadge.jsx =====
+export default function PrioridadBadge({ prioridad }) {
+
+  const estilos = {
+
+    baja: {
+      backgroundColor: "#9ca3af",
+      color: "#fff"
+    },
+
+    media: {
+      backgroundColor: "#3b82f6",
+      color: "#fff"
+    },
+
+    alta: {
+      backgroundColor: "#f97316",
+      color: "#fff"
+    },
+
+    critica: {
+      backgroundColor: "#dc2626",
+      color: "#fff"
+    }
+
+  };
+
+  return (
+
+    <span
+      style={{
+        padding: "4px 10px",
+        borderRadius: "20px",
+        fontSize: "0.8rem",
+        fontWeight: "bold",
+        ...estilos[prioridad]
+      }}
+    >
+
+      {prioridad}
+
+    </span>
+
+  );
+
+}
+===== ./frontend/src/components/proyectos/ProyectoForm.jsx =====
+import { useState, useEffect } from "react";
+
+import { getUsuarios } from "../../api/usuarios.service";
+
+import "../../styles/forms.css";
+import "../../styles/buttons.css";
+
+export default function ProyectoForm({
+  initialData,
+  onSubmit,
+  // Si es edición, ocultamos "Estado" porque se maneja con botones separados
+  modoEdicion = false
+}) {
+
+  const [form, setForm] = useState({
+    codigo: initialData?.codigo || "",
+    nombre: initialData?.nombre || "",
+    descripcion: initialData?.descripcion || "",
+    estado: initialData?.estado || "activo",
+    integrantes: initialData?.Usuarios?.map(u => u.id) || []
+  });
+
+  const [usuarios, setUsuarios] = useState([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(true);
+
+  useEffect(() => {
+    loadUsuarios();
+  }, []);
+
+  async function loadUsuarios() {
+    try {
+      const response = await getUsuarios();
+      console.log("URL base:", response.config.url);        // ← qué URL usó
+      console.log("Request URL:", response.request.responseURL); // ← URL final
+      console.log("DATOS:", response.data);
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error("Error al cargar usuarios:", error);
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  }
+
+  function handleChange(e) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  }
+
+  function handleToggleIntegrante(usuarioId) {
+    const yaEsta = form.integrantes.includes(usuarioId);
+    setForm({
+      ...form,
+      integrantes: yaEsta
+        ? form.integrantes.filter(id => id !== usuarioId)
+        : [...form.integrantes, usuarioId]
+    });
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    onSubmit(form);
+  }
+
+  const ROL_LABELS = {
+    admin: "👑 Admin",
+    lider: "🔷 Líder",
+    colaborador: "👤 Colaborador"
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="form-container">
+
+      {/* CÓDIGO */}
+      <div className="form-group">
+        <label htmlFor="codigo" className="form-label">
+          Código del Proyecto
+        </label>
+        <input
+          id="codigo"
+          name="codigo"
+          value={form.codigo}
+          onChange={handleChange}
+          required
+          placeholder="Ej: DDS-005"
+          className="form-input"
+        />
+      </div>
+
+      {/* NOMBRE */}
+      <div className="form-group">
+        <label htmlFor="nombre" className="form-label">
+          Nombre
+        </label>
+        <input
+          id="nombre"
+          name="nombre"
+          value={form.nombre}
+          onChange={handleChange}
+          required
+          placeholder="Ej: Sistema de Ventas"
+          className="form-input"
+        />
+      </div>
+
+      {/* DESCRIPCIÓN */}
+      <div className="form-group">
+        <label htmlFor="descripcion" className="form-label">
+          Descripción
+        </label>
+        <textarea
+          id="descripcion"
+          name="descripcion"
+          value={form.descripcion}
+          onChange={handleChange}
+          required
+          rows={4}
+          placeholder="Describe brevemente el objetivo del proyecto..."
+          className="form-textarea"
+        />
+      </div>
+
+      {/* ESTADO — solo en edición */}
+      {modoEdicion && (
+        <div className="form-group">
+          <label htmlFor="estado" className="form-label">
+            Estado Actual
+          </label>
+          <select
+            id="estado"
+            name="estado"
+            value={form.estado}
+            onChange={handleChange}
+            className="form-select"
+          >
+            <option value="activo">🟢 Activo</option>
+            <option value="pausado">🟡 Pausado</option>
+            <option value="finalizado">🔵 Finalizado</option>
+          </select>
+        </div>
+      )}
+
+      {/* EQUIPO */}
+      <div className="form-group">
+        <label className="form-label">
+          Equipo del Proyecto
+        </label>
+        <small style={{ color: "#6b7280", marginBottom: "10px", display: "block" }}>
+          Seleccioná los usuarios que pueden ser responsables de tareas en este proyecto.
+        </small>
+
+        {loadingUsuarios ? (
+          <p style={{ color: "#9ca3af" }}>Cargando usuarios...</p>
+        ) : usuarios.length === 0 ? (
+          <p style={{ color: "#9ca3af" }}>No hay usuarios disponibles.</p>
+        ) : (
+          <div
+            style={{
+              border: "1px solid #d1d5db",
+              borderRadius: "8px",
+              overflow: "hidden"
+            }}
+          >
+            {usuarios.map((usuario, index) => {
+              const seleccionado = form.integrantes.includes(usuario.id);
+              return (
+                <div
+                  key={usuario.id}
+                  onClick={() => handleToggleIntegrante(usuario.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 16px",
+                    cursor: "pointer",
+                    backgroundColor: seleccionado ? "#eff6ff" : "white",
+                    borderBottom: index < usuarios.length - 1
+                      ? "1px solid #f3f4f6"
+                      : "none",
+                    transition: "background-color 0.15s"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={seleccionado}
+                    onChange={() => handleToggleIntegrante(usuario.id)}
+                    onClick={e => e.stopPropagation()}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ color: "#111827" }}>
+                      {usuario.nombre}
+                    </strong>
+                    <span style={{ color: "#6b7280", fontSize: "13px", marginLeft: "8px" }}>
+                      {usuario.email}
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      color: seleccionado ? "#2563eb" : "#9ca3af"
+                    }}
+                  >
+                    {ROL_LABELS[usuario.rol] || usuario.rol}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {form.integrantes.length > 0 && (
+          <small style={{ color: "#2563eb", marginTop: "8px", display: "block" }}>
+            ✓ {form.integrantes.length} integrante{form.integrantes.length !== 1 ? "s" : ""} seleccionado{form.integrantes.length !== 1 ? "s" : ""}
+          </small>
+        )}
+      </div>
+
+      {/* ACCIONES */}
+      <div className="form-actions">
+        <button
+          type="submit"
+          className="btn btn-primary"
+        >
+          💾 Guardar Proyecto
+        </button>
+      </div>
+
+    </form>
+  );
+
+}
+
+===== ./frontend/src/components/StatCard.jsx =====
+import "../styles/stat-card.css";
+
+export default function StatCard({
+  title,
+  value
+}) {
+
+  const iconos = {
+
+    Proyectos: "📁",
+
+    Usuarios: "👥",
+
+    Tareas: "✅"
+
+  };
+
+  const colores = {
+
+    Proyectos: "stat-card-value proyectos",
+
+    Usuarios: "stat-card-value usuarios",
+
+    Tareas: "stat-card-value tareas"
+
+  };
+
+  return (
+
+    <div className="stat-card">
+
+      <div className="stat-card-header">
+
+        <span className="stat-card-title">
+
+          {title}
+
+        </span>
+
+        <span className="stat-card-icon">
+
+          {iconos[title]}
+
+        </span>
+
+      </div>
+
+      <div className={colores[title]}>
+
+        {value}
+
+      </div>
+
+    </div>
+
+  );
+
+}
+===== ./frontend/src/components/TareaCard.jsx =====
+import { Link }
+  from "react-router-dom";
+
+import { useAuth }
+  from "../context/AuthContext";
+
+import EstadoBadge
+  from "./EstadoBadge";
+
+import PrioridadBadge
+  from "./PrioridadBadge";
+
+import "../styles/tarea-card.css";
+
+export default function TareaCard({
+  tarea
+}) {
+
+  const { user } =
+    useAuth();
+
+  return (
+
+    <div className="tarea-card">
+
+      <div className="tarea-card-header">
+
+        <div className="tarea-card-id">
+
+          Tarea #{tarea.id}
+
+        </div>
+
+        <h3 className="tarea-card-title">
+
+          {tarea.titulo}
+
+        </h3>
+
+      </div>
+
+      <div className="tarea-card-badges">
+
+        <EstadoBadge
+          estado={tarea.estado}
+        />
+
+        <PrioridadBadge
+          prioridad={tarea.prioridad}
+        />
+
+      </div>
+
+      <div className="tarea-card-info">
+
+        <span>
+
+          📁 {tarea.Proyecto?.nombre}
+
+        </span>
+
+        <span>
+
+          ⏳ Límite:{" "}
+
+          {
+
+            new Date(
+              tarea.fechaLimite
+            ).toLocaleDateString()
+
+          }
+
+        </span>
+
+      </div>
+
+      <div className="tarea-card-actions">
+
+        <Link
+          to={`/tareas/${tarea.id}`}
+          className="tarea-card-btn tarea-card-btn-primary"
+        >
+
+          Ver detalle
+
+        </Link>
+
+        {
+
+          user?.rol === "admin" && (
+
+            <Link
+              to={`/tareas/${tarea.id}/editar`}
+              className="tarea-card-btn tarea-card-btn-warning"
+            >
+
+              Editar
+
+            </Link>
+
+          )
+
+        }
+
+      </div>
+
+    </div>
+
+  );
+
+}
+===== ./frontend/src/components/TareasList.jsx =====
+import TareaCard from "./TareaCard";
+
+export default function TareasList({ tareas }) {
+
+  if (!tareas || tareas.length === 0) {
+
+    return (
+
+      <p>
+        No hay tareas para mostrar.
+      </p>
+
+    );
+
+  }
+
+  return (
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fill, minmax(380px, 1fr))",
+        gap: "20px",
+        alignItems: "start"
+      }}
+    >
+
+      {tareas.map((tarea) => (
+
+        <TareaCard
+          key={tarea.id}
+          tarea={tarea}
+        />
+
+      ))}
+
+    </div>
+
+  );
+
+}
+===== ./frontend/src/context/AuthContext.jsx =====
+import {
+  createContext,
+  useContext,
+  useState
+} from "react";
+
+import * as authService
+  from "../api/auth.service";
+
+const AuthContext =
+  createContext();
+
+export function AuthProvider({
+  children
+}) {
+
+  const [user,
+    setUser] =
+    useState(() => {
+
+      const savedUser =
+        localStorage.getItem(
+          "user"
+        );
+
+      return savedUser
+        ? JSON.parse(savedUser)
+        : null;
+
+    });
+
+  async function login(
+    credentials
+  ) {
+
+    const response =
+      await authService.login(
+        credentials
+      );
+
+    const {
+      token,
+      usuario
+    } = response.data;
+
+    localStorage.setItem(
+      "token",
+      token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(
+        usuario
+      )
+    );
+
+    setUser(
+      usuario
+    );
+
+    return usuario;
+
+  }
+
+  function logout() {
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    localStorage.removeItem(
+      "user"
+    );
+
+    setUser(
+      null
+    );
+
+  }
+
+  return (
+
+    <AuthContext.Provider
+      value={{
+
+        user,
+
+        login,
+
+        logout
+
+      }}
+    >
+
+      {children}
+
+    </AuthContext.Provider>
+
+  );
+
+}
+
+export function useAuth() {
+
+  return useContext(
+    AuthContext
+  );
+
+}
+===== ./frontend/src/index.css =====
+/* ===========================
+   RESET
+=========================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #f8fafc;
+
+  color: #1e293b;
+
+  line-height: 1.5;
+}
+
+/* ===========================
+   HELPERS
+=========================== */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+===== ./frontend/src/layouts/MainLayout.jsx =====
+import Navbar from "../components/Navbar";
+
+export default function MainLayout({ children }) {
+
+  return (
+
+    <>
+
+      <Navbar />
+
+      <main
+        style={{
+          padding: "20px",
+          maxWidth: "1200px",
+          margin: "0 auto"
+        }}
+      >
+        {children}
+      </main>
+
+    </>
+
+  );
+
+}
+===== ./frontend/src/main.jsx =====
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import "./styles/variables.css";
+import "./styles/forms.css";
+import "./styles/buttons.css";
+import "./styles/cards.css";
+import "./styles/layout.css";
+
+import App from './App.jsx'
+
+
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+===== ./frontend/src/pages/DashboardPage.jsx =====
+import {
+  useEffect,
+  useState
+} from "react";
+
+import "../styles/dashboardPage.css";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import StatCard
+  from "../components/StatCard";
+
+import {
+  getDashboard
+} from "../api/dashboard.service";
+
+export default function DashboardPage() {
+
+  const [stats,
+    setStats] =
+    useState(null);
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
+  useEffect(() => {
+
+    loadDashboard();
+
+  }, []);
+
+  async function loadDashboard() {
+
+    try {
+
+      const response =
+        await getDashboard();
+
+      setStats(
+        response.data
+      );
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  if (loading) {
+
+    return (
+
+      <MainLayout>
+
+        <div className="dashboard-loading">
+
+          Cargando dashboard...
+
+        </div>
+
+      </MainLayout>
+
+    );
+
+  }
+
+  return (
+
+    <MainLayout>
+
+      <div className="dashboard-header">
+
+        <h1 className="dashboard-title">
+
+          📊 Dashboard Administrativo
+
+        </h1>
+
+        <p className="dashboard-subtitle">
+
+          Resumen general del sistema y métricas principales.
+
+        </p>
+
+      </div>
+
+      <div className="dashboard-kpis">
+
+        <StatCard
+          title="Proyectos"
+          value={
+            stats.totalProyectos
+          }
+        />
+
+        <StatCard
+          title="Usuarios"
+          value={
+            stats.totalUsuarios
+          }
+        />
+
+        <StatCard
+          title="Tareas"
+          value={
+            stats.totalTareas
+          }
+        />
+
+      </div>
+
+      <section className="dashboard-section">
+
+        <h2 className="dashboard-section-title">
+
+          📌 Tareas por Estado
+
+        </h2>
+
+        <div className="dashboard-states-grid">
+
+          {
+
+            Object.entries(
+              stats.tareasPorEstado
+            ).map(
+
+              ([estado,
+                cantidad]) => (
+
+                <div
+                  key={estado}
+                  className="dashboard-state-card"
+                >
+
+                  <div className="dashboard-state-name">
+
+                    {estado}
+
+                  </div>
+
+                  <div className="dashboard-state-value">
+
+                    {cantidad}
+
+                  </div>
+
+                </div>
+
+              )
+
+            )
+
+          }
+
+        </div>
+
+      </section>
+
+      <div className="dashboard-alerts-grid">
+
+        <div className="dashboard-alert-card dashboard-overdue">
+
+          <h2>
+
+            ⚠️ Tareas Vencidas
+
+          </h2>
+
+          <p>
+
+            Total:
+
+            {" "}
+
+            <strong>
+
+              {
+
+                stats
+                  .tareasVencidas
+                  .cantidad
+
+              }
+
+            </strong>
+
+          </p>
+
+          {
+
+            stats
+              .tareasVencidas
+              .tareas
+              .length === 0
+
+              ? (
+
+                <p>
+
+                  No hay tareas vencidas.
+
+                </p>
+
+              )
+
+              : (
+
+                stats
+                  .tareasVencidas
+                  .tareas
+                  .map(
+
+                    tarea => (
+
+                      <div
+                        key={tarea.id}
+                        className="dashboard-task-row"
+                      >
+
+                        <strong>
+
+                          {tarea.titulo}
+
+                        </strong>
+
+                        <small>
+
+                          👤 {tarea.responsable}
+
+                        </small>
+
+                      </div>
+
+                    )
+
+                  )
+
+              )
+
+          }
+
+        </div>
+
+        <div className="dashboard-alert-card dashboard-critical">
+
+          <h2>
+
+            🔥 Tareas Críticas
+
+          </h2>
+
+          <p>
+
+            Total:
+
+            {" "}
+
+            <strong>
+
+              {
+
+                stats
+                  .tareasCriticas
+                  .cantidad
+
+              }
+
+            </strong>
+
+          </p>
+
+          {
+
+            stats
+              .tareasCriticas
+              .tareas
+              .length === 0
+
+              ? (
+
+                <p>
+
+                  No hay tareas críticas.
+
+                </p>
+
+              )
+
+              : (
+
+                stats
+                  .tareasCriticas
+                  .tareas
+                  .map(
+
+                    tarea => (
+
+                      <div
+                        key={tarea.id}
+                        className="dashboard-task-row"
+                      >
+
+                        <strong>
+
+                          {tarea.titulo}
+
+                        </strong>
+
+                        <small>
+
+                          👤 {tarea.responsable}
+
+                        </small>
+
+                      </div>
+
+                    )
+
+                  )
+
+              )
+
+          }
+
+        </div>
+
+      </div>
+
+      <div className="dashboard-responsables">
+
+        <h2>
+
+          🏆 Tareas por Responsable
+
+        </h2>
+
+        {
+
+          Object.entries(
+            stats.tareasPorResponsable
+          ).map(
+
+            ([nombre,
+              cantidad]) => (
+
+              <div
+                key={nombre}
+                className="dashboard-responsable-row"
+              >
+
+                <span>
+
+                  {nombre}
+
+                </span>
+
+                <strong>
+
+                  {cantidad}
+
+                </strong>
+
+              </div>
+
+            )
+
+          )
+
+        }
+
+      </div>
+
+    </MainLayout>
+
+  );
+
+}
+===== ./frontend/src/pages/LoginPage.jsx =====
+import { useState } from "react";
+
+import { useNavigate }
+  from "react-router-dom";
+
+import { useAuth }
+  from "../context/AuthContext";
+
+import "../styles/auth.css";
+
+export default function LoginPage() {
+
+  const navigate =
+    useNavigate();
+
+  const { login } =
+    useAuth();
+
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
+
+  async function handleSubmit(e) {
+
+    e.preventDefault();
+
+    try {
+
+      setError("");
+
+      await login({
+        email,
+        password
+      });
+
+      navigate("/tareas");
+
+    } catch (err) {
+
+      setError(
+        err.response?.data?.error ||
+        "Error al iniciar sesión"
+      );
+
+    }
+
+  }
+
+  return (
+
+    <div className="auth-page">
+
+      <div className="auth-card">
+
+        <h1 className="auth-title">
+
+          TaskManager
+
+        </h1>
+
+        <p className="auth-subtitle">
+
+          Sistema de Gestión de Proyectos
+
+        </p>
+
+        <form onSubmit={handleSubmit}>
+
+          <div className="form-group">
+
+            <label htmlFor="email">
+
+              Email
+
+            </label>
+
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) =>
+                setEmail(
+                  e.target.value
+                )
+              }
+              required
+            />
+
+          </div>
+
+          <div className="form-group">
+
+            <label htmlFor="password">
+
+              Contraseña
+
+            </label>
+
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
+              required
+            />
+
+          </div>
+
+          {
+
+            error && (
+
+              <div className="auth-error">
+
+                {error}
+
+              </div>
+
+            )
+
+          }
+
+          <button
+            type="submit"
+            className="btn btn-primary auth-submit"
+          >
+
+            Ingresar
+
+          </button>
+
+        </form>
+
+        <div className="auth-footer">
+
+          <span>
+
+            ¿No tenés cuenta?
+
+          </span>
+
+          <button
+            onClick={() =>
+              navigate(
+                "/register"
+              )
+            }
+            className="auth-link-button"
+          >
+
+            Registrarse
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}
+===== ./frontend/src/pages/NotFoundPage.jsx =====
+import { Link } from "react-router-dom";
+
+export default function NotFoundPage() {
+
+  return (
+
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background:
+          "linear-gradient(135deg, #eff6ff, #dbeafe)",
+        padding: "20px"
+      }}
+    >
+
+      <div
+        style={{
+          maxWidth: "600px",
+          width: "100%",
+          backgroundColor: "#fff",
+          borderRadius: "24px",
+          padding: "50px",
+          textAlign: "center",
+          boxShadow:
+            "0 10px 30px rgba(0,0,0,0.08)"
+        }}
+      >
+
+        <div
+          style={{
+            fontSize: "6rem",
+            marginBottom: "10px"
+          }}
+        >
+          🚧
+        </div>
+
+        <h1
+          style={{
+            fontSize: "5rem",
+            margin: 0,
+            color: "#2563eb",
+            lineHeight: 1
+          }}
+        >
+          404
+        </h1>
+
+        <h2
+          style={{
+            marginTop: "15px",
+            color: "#111827"
+          }}
+        >
+          Página no encontrada
+        </h2>
+
+        <p
+          style={{
+            color: "#6b7280",
+            fontSize: "1.1rem",
+            marginBottom: "35px"
+          }}
+        >
+          La página que intentás visitar no existe
+          o fue movida a otra ubicación.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "15px",
+            flexWrap: "wrap"
+          }}
+        >
+
+          <Link
+            to="/tareas"
+            style={{
+              textDecoration: "none",
+              padding: "12px 24px",
+              borderRadius: "10px",
+              backgroundColor: "#2563eb",
+              color: "white",
+              fontWeight: "600"
+            }}
+          >
+            📋 Ver tareas
+          </Link>
+
+          <Link
+            to="/proyectos"
+            style={{
+              textDecoration: "none",
+              padding: "12px 24px",
+              borderRadius: "10px",
+              backgroundColor: "#f3f4f6",
+              color: "#111827",
+              fontWeight: "600"
+            }}
+          >
+            📁 Ver proyectos
+          </Link>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}
+===== ./frontend/src/pages/ProyectoCreatePage.jsx =====
+import { useNavigate }
+from "react-router-dom";
+
+import MainLayout
+from "../layouts/MainLayout";
+
+import ProyectoForm
+from "../components/proyectos/ProyectoForm";
+
+import {
+  createProyecto
+} from "../api/proyectos.service";
+
+export default function ProyectoCreatePage() {
+
+  const navigate = useNavigate();
+
+  async function handleCreate(data) {
+
+    try {
+
+      // data ya incluye { codigo, nombre, descripcion, integrantes[] }
+      await createProyecto(data);
+
+      navigate("/proyectos");
+
+    } catch (error) {
+
+      alert(
+        error.response?.data?.error ||
+        "Error al crear proyecto"
+      );
+
+    }
+
+  }
+
+  return (
+
+    <MainLayout>
+
+      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+
+        <button
+          onClick={() => navigate("/proyectos")}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            cursor: "pointer",
+            marginBottom: "20px",
+            fontWeight: "600"
+          }}
+        >
+          ← Volver a proyectos
+        </button>
+
+        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+
+          <div style={{ fontSize: "3rem", marginBottom: "10px" }}>
+            🚀
+          </div>
+
+          <h1 style={{ margin: 0, color: "#111827", fontSize: "2.2rem" }}>
+            Crear Nuevo Proyecto
+          </h1>
+
+          <p style={{ color: "#6b7280", marginTop: "10px" }}>
+            Registra un nuevo proyecto y asigná el equipo desde el inicio.
+          </p>
+
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            padding: "35px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)"
+          }}
+        >
+
+          <ProyectoForm onSubmit={handleCreate} />
+
+        </div>
+
+      </div>
+
+    </MainLayout>
+
+  );
+
+}
+
+===== ./frontend/src/pages/ProyectoDetallePage.jsx =====
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useParams
+} from "react-router-dom";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import {
+  getProyecto
+} from "../api/proyectos.service";
+
+import "../styles/proyecto-detalle.css";
+
+export default function ProyectoDetallePage() {
+
+  const { id } =
+    useParams();
+
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [proyecto,
+    setProyecto] =
+    useState(null);
+
+  useEffect(() => {
+
+    loadProyecto();
+
+  }, []);
+
+  async function loadProyecto() {
+
+    try {
+
+      const response =
+        await getProyecto(id);
+
+      setProyecto(
+        response.data
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+  if (!proyecto) {
+
+    return (
+
+      <MainLayout>
+
+        <div className="proyecto-detalle-loading">
+
+          Cargando proyecto...
+
+        </div>
+
+      </MainLayout>
+
+    );
+
+  }
+
+  return (
+
+    <MainLayout>
+
+      {/* HEADER */}
+
+      <div className="proyecto-detalle-header">
+
+        <div className="proyecto-detalle-header-top">
+
+        <div>
+
+          <h1 className="proyecto-detalle-title">
+
+            📁 {proyecto.nombre}
+
+          </h1>
+
+          <p className="proyecto-detalle-code">
+
+            Código:
+
+            {" "}
+
+            <strong>
+
+              {proyecto.codigo}
+
+            </strong>
+
+          </p>
+
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+
+          <span
+            className={`proyecto-detalle-status proyecto-detalle-status-${proyecto.estado}`}
+          >
+            {proyecto.estado}
+          </span>
+
+          {user?.rol === "admin" && (
+            <button
+              onClick={() => navigate(`/proyectos/${proyecto.id}/editar`)}
+              style={{
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "0.9rem"
+              }}
+            >
+              ✏️ Editar
+            </button>
+          )}
+
+        </div>
+
+      </div>
+
+        <p className="proyecto-detalle-description">
+
+          {proyecto.descripcion}
+
+        </p>
+
+      </div>
+
+      {/* RESUMEN */}
+
+      <div className="proyecto-detalle-summary">
+
+        <div className="proyecto-detalle-stat-card">
+
+          <div className="proyecto-detalle-stat-label">
+
+            Usuarios asignados
+
+          </div>
+
+          <div className="proyecto-detalle-stat-value proyecto-detalle-stat-blue">
+
+            {
+
+              proyecto
+                .Usuarios?.length || 0
+
+            }
+
+          </div>
+
+        </div>
+
+        <div className="proyecto-detalle-stat-card">
+
+          <div className="proyecto-detalle-stat-label">
+
+            Tareas del proyecto
+
+          </div>
+
+          <div className="proyecto-detalle-stat-value proyecto-detalle-stat-green">
+
+            {
+
+              proyecto
+                .Tareas?.length || 0
+
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* USUARIOS Y TAREAS */}
+
+      <div className="proyecto-detalle-content">
+
+        {/* USUARIOS */}
+
+        <div className="proyecto-detalle-panel">
+
+          <h2 className="proyecto-detalle-panel-title">
+
+            👥 Usuarios
+
+          </h2>
+
+          {
+
+            proyecto.Usuarios
+              ?.length === 0
+
+              ? (
+
+                <p className="proyecto-detalle-empty">
+
+                  Sin usuarios asignados.
+
+                </p>
+
+              )
+
+              : (
+
+                proyecto.Usuarios
+                  ?.map(
+
+                    usuario => (
+
+                      <div
+                        key={
+                          usuario.id
+                        }
+                        className="proyecto-detalle-user-row"
+                      >
+
+                        <strong>
+
+                          {usuario.nombre}
+
+                        </strong>
+
+                        <small>
+
+                          {usuario.rol}
+
+                        </small>
+
+                      </div>
+
+                    )
+
+                  )
+
+              )
+
+          }
+
+        </div>
+
+        {/* TAREAS */}
+
+        <div className="proyecto-detalle-panel">
+
+          <h2 className="proyecto-detalle-panel-title">
+
+            📋 Tareas
+
+          </h2>
+
+          {
+
+            proyecto.Tareas
+              ?.length === 0
+
+              ? (
+
+                <p className="proyecto-detalle-empty">
+
+                  No hay tareas asociadas.
+
+                </p>
+
+              )
+
+              : (
+
+                proyecto.Tareas
+                  ?.map(
+
+                    tarea => (
+
+                      <div
+                        key={
+                          tarea.id
+                        }
+                        className="proyecto-detalle-task-card"
+                      >
+
+                        <strong>
+
+                          {tarea.titulo}
+
+                        </strong>
+
+                        <div className="proyecto-detalle-task-status">
+
+                          Estado:
+
+                          {" "}
+
+                          {tarea.estado}
+
+                        </div>
+
+                      </div>
+
+                    )
+
+                  )
+
+              )
+
+          }
+
+        </div>
+
+      </div>
+
+    </MainLayout>
+
+  );
+
+}
+===== ./frontend/src/pages/ProyectoEditPage.jsx =====
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useNavigate,
+  useParams
+} from "react-router-dom";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import ProyectoForm
+  from "../components/proyectos/ProyectoForm";
+
+import {
+  getProyecto,
+  updateProyecto,
+  setIntegrantesProyecto
+} from "../api/proyectos.service";
+
+export default function ProyectoEditPage() {
+
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [proyecto, setProyecto] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadProyecto();
+  }, []);
+
+  async function loadProyecto() {
+    try {
+      const response = await getProyecto(id);
+      setProyecto(response.data);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cargar el proyecto");
+    }
+  }
+
+  async function handleUpdate(data) {
+    try {
+      setError("");
+
+      // 1. Actualizar datos del proyecto
+      await updateProyecto(id, {
+        codigo: data.codigo,
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        estado: data.estado
+      });
+
+      // 2. Actualizar integrantes por separado
+      await setIntegrantesProyecto(id, data.integrantes);
+
+      navigate(`/proyectos/${id}`);
+
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.error ||
+        "Error al actualizar el proyecto"
+      );
+    }
+  }
+
+  if (!proyecto) {
+    return (
+      <MainLayout>
+        <p>{error || "Cargando proyecto..."}</p>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+
+      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+
+        <button
+          onClick={() => navigate(`/proyectos/${id}`)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            cursor: "pointer",
+            marginBottom: "20px",
+            fontWeight: "600",
+            padding: 0
+          }}
+        >
+          ← Volver al proyecto
+        </button>
+
+        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "10px" }}>✏️</div>
+          <h1 style={{ margin: 0, color: "#111827", fontSize: "2.2rem" }}>
+            Editar Proyecto
+          </h1>
+          <p style={{ color: "#6b7280", marginTop: "10px" }}>
+            Modificá los datos del proyecto y su equipo.
+          </p>
+        </div>
+
+        {error && (
+          <div
+            style={{
+              backgroundColor: "#fee2e2",
+              color: "#b91c1c",
+              padding: "12px",
+              borderRadius: "8px",
+              marginBottom: "20px"
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            padding: "35px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)"
+          }}
+        >
+          <ProyectoForm
+            initialData={proyecto}
+            onSubmit={handleUpdate}
+            modoEdicion={true}
+          />
+        </div>
+
+      </div>
+
+    </MainLayout>
+  );
+
+}
+
+===== ./frontend/src/pages/ProyectosPage.jsx =====
+import { useEffect, useState } from "react";
+
+import { Link } from "react-router-dom";
+
+import MainLayout from "../layouts/MainLayout";
+
+import {
+    getProyectos,
+    deleteProyecto
+} from "../api/proyectos.service";
+
+import { useAuth } from "../context/AuthContext";
+
+export default function ProyectosPage() {
+
+    const [proyectos, setProyectos] =
+        useState([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const { user } =
+        useAuth();
+
+    useEffect(() => {
+
+        loadProyectos();
+
+    }, []);
+
+    async function loadProyectos() {
+
+        try {
+
+            setLoading(true);
+
+            const response =
+                await getProyectos();
+
+            setProyectos(
+                response.data
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Error al cargar proyectos"
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    }
+
+    async function handleDelete(id) {
+
+        const confirmar =
+            window.confirm(
+                "¿Está seguro que desea eliminar este proyecto?"
+            );
+
+        if (!confirmar) return;
+
+        try {
+
+            await deleteProyecto(id);
+
+            await loadProyectos();
+
+        } catch (error) {
+
+            alert(
+                error.response?.data?.error ||
+                "Error al eliminar proyecto"
+            );
+
+        }
+
+    }
+
+    function getEstadoColor(estado) {
+
+        switch (estado) {
+
+            case "activo":
+                return "#22c55e";
+
+            case "pausado":
+                return "#f59e0b";
+
+            case "finalizado":
+                return "#64748b";
+
+            default:
+                return "#3b82f6";
+
+        }
+
+    }
+
+    return (
+
+        <MainLayout>
+
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "30px"
+                }}
+            >
+
+                <div>
+
+                    <h1
+                        style={{
+                            margin: 0,
+                            fontSize: "2rem"
+                        }}
+                    >
+                        📁 Proyectos
+                    </h1>
+
+                    <p
+                        style={{
+                            color: "#64748b",
+                            marginTop: "5px"
+                        }}
+                    >
+                        Administración y seguimiento de proyectos
+                    </p>
+
+                </div>
+
+                {
+
+                    user?.rol === "admin" && (
+
+                        <Link
+                            to="/proyectos/nuevo"
+                        >
+
+                            <button
+                                style={{
+                                    background:
+                                        "#2563eb",
+                                    color: "white",
+                                    border: "none",
+                                    padding:
+                                        "12px 18px",
+                                    borderRadius:
+                                        "8px",
+                                    cursor: "pointer",
+                                    fontWeight:
+                                        "bold"
+                                }}
+                            >
+                                ➕ Nuevo Proyecto
+                            </button>
+
+                        </Link>
+
+                    )
+
+                }
+
+            </div>
+
+            {
+
+                loading ? (
+
+                    <div
+                        style={{
+                            textAlign: "center",
+                            padding: "50px"
+                        }}
+                    >
+                        <h3>
+                            Cargando proyectos...
+                        </h3>
+                    </div>
+
+                ) : (
+
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                                "repeat(auto-fill, minmax(340px, 1fr))",
+                            gap: "20px"
+                        }}
+                    >
+
+                        {
+
+                            proyectos.map(
+                                proyecto => (
+
+                                    <div
+                                        key={
+                                            proyecto.id
+                                        }
+                                        style={{
+                                            background:
+                                                "#fff",
+                                            border:
+                                                "1px solid #e5e7eb",
+                                            borderRadius:
+                                                "12px",
+                                            padding:
+                                                "20px",
+                                            boxShadow:
+                                                "0 2px 8px rgba(0,0,0,0.06)",
+                                            display:
+                                                "flex",
+                                            flexDirection:
+                                                "column",
+                                            gap: "10px"
+                                        }}
+                                    >
+
+                                        <div
+                                            style={{
+                                                display:
+                                                    "flex",
+                                                justifyContent:
+                                                    "space-between",
+                                                alignItems:
+                                                    "center"
+                                            }}
+                                        >
+
+                                            <span
+                                                style={{
+                                                    fontSize:
+                                                        "0.8rem",
+                                                    color:
+                                                        "#64748b"
+                                                }}
+                                            >
+                                                {
+                                                    proyecto.codigo
+                                                }
+                                            </span>
+
+                                            <span
+                                                style={{
+                                                    background:
+                                                        getEstadoColor(
+                                                            proyecto.estado
+                                                        ),
+                                                    color:
+                                                        "white",
+                                                    padding:
+                                                        "4px 10px",
+                                                    borderRadius:
+                                                        "20px",
+                                                    fontSize:
+                                                        "0.8rem",
+                                                    fontWeight:
+                                                        "bold"
+                                                }}
+                                            >
+                                                {
+                                                    proyecto.estado
+                                                }
+                                            </span>
+
+                                        </div>
+
+                                        <h2
+                                            style={{
+                                                margin:
+                                                    "5px 0",
+                                                color:
+                                                    "#0f172a"
+                                            }}
+                                        >
+                                            {
+                                                proyecto.nombre
+                                            }
+                                        </h2>
+
+                                        <p
+                                            style={{
+                                                color:
+                                                    "#475569",
+                                                minHeight:
+                                                    "50px"
+                                            }}
+                                        >
+                                            {
+                                                proyecto.descripcion
+                                            }
+                                        </p>
+
+                                        <div
+                                            style={{
+                                                display:
+                                                    "flex",
+                                                gap: "20px",
+                                                fontSize:
+                                                    "0.95rem"
+                                            }}
+                                        >
+
+                                            <span>
+                                                👥{" "}
+                                                <strong>
+                                                    {
+                                                        proyecto.Usuarios?.length || 0
+                                                    }
+                                                </strong>
+                                            </span>
+
+                                            <span>
+                                                ✅{" "}
+                                                <strong>
+                                                    {
+                                                        proyecto.Tareas?.length || 0
+                                                    }
+                                                </strong>
+                                            </span>
+
+                                        </div>
+
+                                        <hr
+                                            style={{
+                                                border:
+                                                    "none",
+                                                borderTop:
+                                                    "1px solid #e5e7eb"
+                                            }}
+                                        />
+
+                                        <div
+                                            style={{
+                                                display:
+                                                    "flex",
+                                                gap: "10px",
+                                                flexWrap:
+                                                    "wrap"
+                                            }}
+                                        >
+
+                                            <Link
+                                                to={`/proyectos/${proyecto.id}`}
+                                            >
+
+                                                <button style={{
+                                                    background:
+                                                        "#2626dc",
+                                                    color:
+                                                        "white",
+                                                    border:
+                                                        "none",
+                                                    padding:
+                                                        "6px 12px",
+                                                    borderRadius:
+                                                        "6px",
+                                                    cursor:
+                                                        "pointer"
+                                                }}>
+                                                    Ver
+                                                </button>
+
+                                            </Link>
+
+                                            {
+
+                                                user?.rol === "admin" && (
+
+                                                    <>
+
+                                                        <Link
+                                                            to={`/proyectos/${proyecto.id}/editar`}
+                                                        >
+
+                                                            <button style={{
+                                                                background:
+                                                                    "#2626dc",
+                                                                color:
+                                                                    "white",
+                                                                border:
+                                                                    "none",
+                                                                padding:
+                                                                    "6px 12px",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                cursor:
+                                                                    "pointer"
+                                                            }}>
+                                                                Editar
+                                                            </button>
+
+                                                        </Link>
+
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    proyecto.id
+                                                                )
+                                                            }
+                                                            style={{
+                                                                background:
+                                                                    "#dc2626",
+                                                                color:
+                                                                    "white",
+                                                                border:
+                                                                    "none",
+                                                                padding:
+                                                                    "6px 12px",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                cursor:
+                                                                    "pointer"
+                                                            }}
+                                                        >
+                                                            Eliminar
+                                                        </button>
+
+                                                    </>
+
+                                                )
+
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                )
+
+                            )
+
+                        }
+
+                    </div>
+
+                )
+
+            }
+
+        </MainLayout>
+
+    );
+
+}
+===== ./frontend/src/pages/RegisterPage.jsx =====
+import { useState }
+  from "react";
+
+import {
+  useNavigate,
+  Link
+} from "react-router-dom";
+
+import {
+  register
+} from "../api/auth.service";
+
+import "../styles/auth.css";
+
+export default function RegisterPage() {
+
+  const navigate =
+    useNavigate();
+
+  const [form,
+    setForm] =
+    useState({
+
+      nombre: "",
+
+      email: "",
+
+      password: ""
+
+    });
+
+  const [error,
+    setError] =
+    useState("");
+
+  const [loading,
+    setLoading] =
+    useState(false);
+
+  function handleChange(e) {
+
+    setForm({
+
+      ...form,
+
+      [e.target.name]:
+        e.target.value
+
+    });
+
+  }
+
+  async function handleSubmit(e) {
+
+    e.preventDefault();
+
+    setError("");
+
+    setLoading(true);
+
+    try {
+
+      await register(form);
+
+      alert(
+        "Usuario registrado correctamente"
+      );
+
+      navigate("/login");
+
+    } catch (err) {
+
+      setError(
+
+        err.response?.data?.error ||
+
+        "Error al registrar usuario"
+
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  return (
+
+    <div className="auth-page">
+
+      <div className="auth-card">
+
+        <h1 className="auth-title">
+
+          Crear Cuenta
+
+        </h1>
+
+        <p className="auth-subtitle">
+
+          Registrate para comenzar a utilizar el sistema
+
+        </p>
+
+        <form
+          onSubmit={handleSubmit}
+        >
+
+          <div className="form-group">
+
+            <label htmlFor="nombre">
+
+              Nombre
+
+            </label>
+
+            <input
+              id="nombre"
+              type="text"
+              name="nombre"
+              value={form.nombre}
+              onChange={handleChange}
+              placeholder="Juan Pérez"
+              required
+            />
+
+          </div>
+
+          <div className="form-group">
+
+            <label htmlFor="email">
+
+              Email
+
+            </label>
+
+            <input
+              id="email"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="usuario@email.com"
+              required
+            />
+
+          </div>
+
+          <div className="form-group">
+
+            <label htmlFor="password">
+
+              Contraseña
+
+            </label>
+
+            <input
+              id="password"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="********"
+              required
+            />
+
+          </div>
+
+          {
+
+            error && (
+
+              <div className="auth-error">
+
+                {error}
+
+              </div>
+
+            )
+
+          }
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary auth-submit"
+          >
+
+            {
+
+              loading
+
+                ? "Registrando..."
+
+                : "Crear Cuenta"
+
+            }
+
+          </button>
+
+        </form>
+
+        <div className="auth-footer">
+
+          <span>
+
+            ¿Ya tenés cuenta?
+
+          </span>
+
+          <Link
+            to="/login"
+            className="auth-link-button"
+          >
+
+            Iniciar sesión
+
+          </Link>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}
+===== ./frontend/src/pages/TareaDetallePage.jsx =====
+import "../styles/tarea-detalle.css";
+import "../styles/cards.css";
+import "../styles/buttons.css";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useParams,
+  Link
+} from "react-router-dom";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import {
+  getTarea
+} from "../api/tareas.service";
+
+import EstadoBadge
+  from "../components/EstadoBadge";
+
+import PrioridadBadge
+  from "../components/PrioridadBadge";
+
+export default function TareaDetallePage() {
+
+  const { id } =
+    useParams();
+
+  const [tarea,
+    setTarea] =
+    useState(null);
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
+  useEffect(() => {
+
+    loadTarea();
+
+  }, [id]);
+
+  async function loadTarea() {
+
+    try {
+
+      const response =
+        await getTarea(id);
+
+      setTarea(
+        response.data
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  if (loading) {
+
+    return (
+      <MainLayout>
+        <p>Cargando tarea...</p>
+      </MainLayout>
+    );
+
+  }
+
+  if (!tarea) {
+
+    return (
+      <MainLayout>
+        <p>Tarea no encontrada</p>
+      </MainLayout>
+    );
+
+  }
+
+  return (
+
+    <MainLayout>
+
+      <div className="tarea-detalle-container">
+
+        <div className="tarea-detalle-header">
+
+          <div>
+
+            <div className="tarea-detalle-id">
+
+              Tarea #{tarea.id}
+
+            </div>
+
+            <h1 className="tarea-detalle-title">
+
+              {tarea.titulo}
+
+            </h1>
+
+          </div>
+
+          <Link
+            to={`/tareas/${tarea.id}/editar`}
+            className="btn-link"
+          >
+
+            <button
+              className="btn btn-primary"
+            >
+              ✏️ Editar
+            </button>
+
+          </Link>
+
+        </div>
+
+        <div className="tarea-detalle-badges">
+
+          <EstadoBadge
+            estado={tarea.estado}
+          />
+
+          <PrioridadBadge
+            prioridad={tarea.prioridad}
+          />
+
+        </div>
+
+        <div className="card tarea-detalle-description">
+
+          <h3>
+            Descripción
+          </h3>
+
+          <p>
+            {tarea.descripcion}
+          </p>
+
+        </div>
+
+        <div className="tarea-detalle-grid">
+
+          <div
+            className="card tarea-detalle-card"
+          >
+
+            <h3>
+              Información General
+            </h3>
+
+            <p>
+
+              <strong>
+                Proyecto:
+              </strong>
+
+              <br />
+
+              📁 {tarea.Proyecto?.nombre}
+
+            </p>
+
+            <p>
+
+              <strong>
+                Responsable:
+              </strong>
+
+              <br />
+
+              👤 {tarea.responsable?.nombre}
+
+            </p>
+
+          </div>
+
+          <div
+            className="card tarea-detalle-card"
+          >
+
+            <h3>
+              Fechas
+            </h3>
+
+            <p>
+
+              <strong>
+                Creación:
+              </strong>
+
+              <br />
+
+              📅 {
+
+                tarea.createdAt
+
+                  ? new Date(
+                    tarea.createdAt
+                  ).toLocaleDateString()
+
+                  : "-"
+
+              }
+
+            </p>
+
+            <p>
+
+              <strong>
+                Fecha límite:
+              </strong>
+
+              <br />
+
+              ⏳ {
+
+                tarea.fechaLimite
+
+                  ? new Date(
+                    tarea.fechaLimite
+                  ).toLocaleDateString()
+
+                  : "-"
+
+              }
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </MainLayout>
+
+  );
+};
+===== ./frontend/src/pages/TareaEditPage.jsx =====
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useNavigate,
+  useParams
+} from "react-router-dom";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import {
+  getTarea,
+  updateTarea
+} from "../api/tareas.service";
+
+import {
+  getProyecto
+} from "../api/proyectos.service";
+
+export default function TareaEditPage() {
+
+  const { id } =
+    useParams();
+
+  const navigate =
+    useNavigate();
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [integrantes, setIntegrantes] =
+    useState([]);
+
+  const [titulo, setTitulo] =
+    useState("");
+
+  const [descripcion, setDescripcion] =
+    useState("");
+
+  const [prioridad, setPrioridad] =
+    useState("");
+
+  const [fechaLimite, setFechaLimite] =
+    useState("");
+
+  const [responsableId, setResponsableId] =
+    useState("");
+
+  // Estado actual solo para mostrarlo, no para editar
+  const [estadoActual, setEstadoActual] =
+    useState("");
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+
+      const tareaResponse = await getTarea(id);
+      const tarea = tareaResponse.data;
+
+      setTitulo(tarea.titulo);
+      setDescripcion(tarea.descripcion);
+      setPrioridad(tarea.prioridad);
+      setEstadoActual(tarea.estado);
+      setFechaLimite(
+        tarea.fechaLimite?.split("T")[0] || tarea.fechaLimite
+      );
+      setResponsableId(tarea.responsableId);
+
+      // Cargar integrantes del proyecto de esta tarea
+      const proyectoResponse =
+        await getProyecto(tarea.proyectoId);
+
+      setIntegrantes(
+        proyectoResponse.data.Usuarios || []
+      );
+
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cargar la tarea");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    try {
+      await updateTarea(id, {
+        titulo,
+        descripcion,
+        prioridad,
+        fechaLimite,
+        responsableId
+      });
+
+      navigate(`/tareas/${id}`);
+
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.error ||
+        "Error al actualizar tarea"
+      );
+    }
+  }
+
+  const inputStyle = {
+    width: "100%",
+    padding: "12px",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
+    fontSize: "14px",
+    boxSizing: "border-box"
+  };
+
+  const labelStyle = {
+    display: "block",
+    marginBottom: "6px",
+    fontWeight: "600",
+    color: "#374151"
+  };
+
+  const ESTADO_LABELS = {
+    pendiente: "⏳ Pendiente",
+    en_progreso: "🔵 En progreso",
+    bloqueada: "🔴 Bloqueada",
+    finalizada: "✅ Finalizada",
+    cancelada: "⛔ Cancelada"
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <p>Cargando tarea...</p>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+
+      <div
+        style={{
+          maxWidth: "850px",
+          margin: "0 auto",
+          backgroundColor: "#fff",
+          padding: "30px",
+          borderRadius: "12px",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.08)"
+        }}
+      >
+
+        <button
+          onClick={() => navigate(`/tareas/${id}`)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            cursor: "pointer",
+            marginBottom: "20px",
+            fontWeight: "600",
+            padding: 0
+          }}
+        >
+          ← Volver al detalle
+        </button>
+
+        <h1 style={{ marginTop: 0, marginBottom: "6px" }}>
+          ✏️ Editar tarea
+        </h1>
+
+        <p style={{ color: "#6b7280", marginBottom: "25px" }}>
+          Modificá los datos de la tarea y guardá los cambios.
+        </p>
+
+        {/* Estado actual — solo lectura, se cambia desde el detalle */}
+        <div
+          style={{
+            backgroundColor: "#f1f5f9",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            padding: "12px 16px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px"
+          }}
+        >
+          <span style={{ color: "#64748b", fontWeight: "600", fontSize: "14px" }}>
+            Estado actual:
+          </span>
+          <span style={{ fontWeight: "700", color: "#1e293b" }}>
+            {ESTADO_LABELS[estadoActual] || estadoActual}
+          </span>
+          <span style={{ color: "#94a3b8", fontSize: "13px" }}>
+            — Para cambiar el estado usá los botones en el detalle de la tarea.
+          </span>
+        </div>
+
+        {error && (
+          <div
+            style={{
+              backgroundColor: "#fee2e2",
+              color: "#b91c1c",
+              padding: "12px",
+              borderRadius: "8px",
+              marginBottom: "20px"
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "18px" }}
+        >
+
+          <div>
+            <label htmlFor="titulo" style={labelStyle}>
+              Título
+            </label>
+            <input
+              id="titulo"
+              value={titulo}
+              onChange={e => setTitulo(e.target.value)}
+              required
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="descripcion" style={labelStyle}>
+              Descripción
+            </label>
+            <textarea
+              id="descripcion"
+              rows="5"
+              value={descripcion}
+              onChange={e => setDescripcion(e.target.value)}
+              required
+              style={{ ...inputStyle, resize: "vertical" }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="prioridad" style={labelStyle}>
+              Prioridad
+            </label>
+            <select
+              id="prioridad"
+              value={prioridad}
+              onChange={e => setPrioridad(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="fechaLimite" style={labelStyle}>
+              Fecha límite
+            </label>
+            <input
+              id="fechaLimite"
+              type="date"
+              value={fechaLimite}
+              onChange={e => setFechaLimite(e.target.value)}
+              required
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="responsable" style={labelStyle}>
+              Responsable
+            </label>
+            {integrantes.length === 0 ? (
+              <p style={{ color: "#9ca3af", fontSize: "14px" }}>
+                No se pudieron cargar los integrantes del proyecto.
+              </p>
+            ) : (
+              <select
+                id="responsable"
+                value={responsableId}
+                onChange={e => setResponsableId(Number(e.target.value))}
+                style={{ ...inputStyle, cursor: "pointer" }}
+              >
+                <option value="">
+                  Seleccionar responsable
+                </option>
+                {integrantes.map(usuario => (
+                  <option key={usuario.id} value={usuario.id}>
+                    {usuario.nombre} ({usuario.rol})
+                  </option>
+                ))}
+              </select>
+            )}
+            <small style={{ color: "#94a3b8", marginTop: "4px", display: "block" }}>
+              Solo se muestran integrantes del proyecto.
+            </small>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              marginTop: "10px"
+            }}
+          >
+            <button
+              type="submit"
+              style={{
+                backgroundColor: "#2563eb",
+                color: "white",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              💾 Guardar cambios
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate(`/tareas/${id}`)}
+              style={{
+                backgroundColor: "#e5e7eb",
+                color: "#111827",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </MainLayout>
+  );
+
+}
+
+===== ./frontend/src/pages/TareaFormPage.jsx =====
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useNavigate
+} from "react-router-dom";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import {
+  createTarea
+} from "../api/tareas.service";
+
+import {
+  getProyectos
+} from "../api/proyectos.service";
+
+import {
+  getUsuarios
+} from "../api/usuarios.service";
+
+import "../styles/TareaFormPage.css";
+
+export default function TareaFormPage() {
+
+  const navigate =
+    useNavigate();
+
+  const [titulo, setTitulo] =
+    useState("");
+
+  const [descripcion,
+    setDescripcion] =
+    useState("");
+
+  const [prioridad,
+    setPrioridad] =
+    useState("media");
+
+  const [fechaLimite,
+    setFechaLimite] =
+    useState("");
+
+  const [proyectoId,
+    setProyectoId] =
+    useState("");
+
+  const [responsableId,
+    setResponsableId] =
+    useState("");
+
+  const [proyectos,
+    setProyectos] =
+    useState([]);
+
+  const [usuarios,
+    setUsuarios] =
+    useState([]);
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
+  useEffect(() => {
+
+    loadData();
+
+  }, []);
+
+  async function loadData() {
+
+    try {
+
+      const [
+        proyectosResponse,
+        usuariosResponse
+      ] = await Promise.all([
+
+        getProyectos(),
+
+        getUsuarios()
+
+      ]);
+
+      setProyectos(
+        proyectosResponse.data
+      );
+
+      setUsuarios(
+        usuariosResponse.data
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  async function handleSubmit(e) {
+
+    e.preventDefault();
+
+    try {
+
+      await createTarea({
+
+        titulo,
+
+        descripcion,
+
+        prioridad,
+
+        fechaLimite,
+
+        proyectoId:
+          Number(proyectoId),
+
+        responsableId:
+          Number(responsableId)
+
+      });
+
+      navigate("/tareas");
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        error.response?.data?.error ||
+        "Error al crear tarea"
+      );
+
+    }
+
+  }
+
+  if (loading) {
+
+    return (
+
+      <MainLayout>
+
+        <p>
+          Cargando formulario...
+        </p>
+
+      </MainLayout>
+
+    );
+
+  }
+
+  return (
+
+    <MainLayout>
+
+      <div className="tarea-form-container">
+
+        <div className="tarea-form-header">
+
+          <h1>
+            Nueva Tarea
+          </h1>
+
+          <p>
+            Complete los datos para crear una nueva tarea.
+          </p>
+
+        </div>
+
+        <div className="tarea-form-card">
+
+          <form onSubmit={handleSubmit}>
+
+            <div className="form-group">
+
+              <label htmlFor="titulo">
+                Título
+              </label>
+
+              <input
+                id="titulo"
+                value={titulo}
+                onChange={e =>
+                  setTitulo(
+                    e.target.value
+                  )
+                }
+                required
+              />
+
+            </div>
+
+            <div className="form-group">
+
+              <label htmlFor="descripcion">
+                Descripción
+              </label>
+
+              <textarea
+                id="descripcion"
+                rows={5}
+                value={descripcion}
+                onChange={e =>
+                  setDescripcion(
+                    e.target.value
+                  )
+                }
+                required
+              />
+
+            </div>
+
+            <div className="form-grid">
+
+              <div className="form-group">
+
+                <label htmlFor="prioridad">
+                  Prioridad
+                </label>
+
+                <select
+                  id="prioridad"
+                  value={prioridad}
+                  onChange={e =>
+                    setPrioridad(
+                      e.target.value
+                    )
+                  }
+                >
+
+                  <option value="baja">
+                    Baja
+                  </option>
+
+                  <option value="media">
+                    Media
+                  </option>
+
+                  <option value="alta">
+                    Alta
+                  </option>
+
+                  <option value="critica">
+                    Crítica
+                  </option>
+
+                </select>
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="fechaLimite">
+                  Fecha límite
+                </label>
+
+                <input
+                  id="fechaLimite"
+                  type="date"
+                  value={fechaLimite}
+                  onChange={e =>
+                    setFechaLimite(
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+
+              </div>
+
+            </div>
+
+            <div className="form-grid">
+
+              <div className="form-group">
+
+                <label htmlFor="proyecto">
+                  Proyecto
+                </label>
+
+                <select
+                  id="proyecto"
+                  value={proyectoId}
+                  onChange={e =>
+                    setProyectoId(
+                      e.target.value
+                    )
+                  }
+                  required
+                >
+
+                  <option value="">
+                    Seleccione un proyecto
+                  </option>
+
+                  {
+
+                    proyectos.map(
+                      proyecto => (
+
+                        <option
+                          key={proyecto.id}
+                          value={proyecto.id}
+                        >
+                          {proyecto.nombre}
+                        </option>
+
+                      )
+                    )
+
+                  }
+
+                </select>
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="responsable">
+                  Responsable
+                </label>
+
+                <select
+                  id="responsable"
+                  value={responsableId}
+                  onChange={e =>
+                    setResponsableId(
+                      e.target.value
+                    )
+                  }
+                  required
+                >
+
+                  <option value="">
+                    Seleccione un usuario
+                  </option>
+
+                  {
+
+                    usuarios.map(
+                      usuario => (
+
+                        <option
+                          key={usuario.id}
+                          value={usuario.id}
+                        >
+
+                          {usuario.nombre}
+                          {" "}
+                          ({usuario.rol})
+
+                        </option>
+
+                      )
+                    )
+
+                  }
+
+                </select>
+
+              </div>
+
+            </div>
+
+            <div className="form-actions">
+
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() =>
+                  navigate("/tareas")
+                }
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="btn-primary"
+              >
+                Crear tarea
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    </MainLayout>
+
+  );
+
+}
+===== ./frontend/src/pages/TareasPage.jsx =====
+import {
+  useEffect,
+  useState
+} from "react";
+
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+import MainLayout
+  from "../layouts/MainLayout";
+
+import TareasList
+  from "../components/TareasList";
+
+import {
+  getTareas
+} from "../api/tareas.service";
+
+export default function TareasPage() {
+
+  const { user } = useAuth();
+
+  const [tareas,
+    setTareas] =
+    useState([]);
+
+  const [loading,
+    setLoading] =
+    useState(false);
+
+  const [estado,
+    setEstado] =
+    useState("");
+
+  const [prioridad,
+    setPrioridad] =
+    useState("");
+
+  const [sortBy,
+    setSortBy] =
+    useState("createdAt");
+
+  const [order,
+    setOrder] =
+    useState("DESC");
+
+  const [page,
+    setPage] =
+    useState(1);
+
+  const [totalPages,
+    setTotalPages] =
+    useState(1);
+
+  const [search,
+    setSearch] =
+    useState("");
+
+  useEffect(() => {
+
+    loadTareas();
+
+  }, [
+    estado,
+    prioridad,
+    sortBy,
+    order,
+    page
+  ]);
+
+  async function loadTareas() {
+
+    try {
+
+      setLoading(true);
+
+      const response =
+        await getTareas({
+
+          estado,
+
+          prioridad,
+
+          sortBy,
+
+          order,
+
+          page,
+
+          limit: 10
+
+        });
+
+      setTareas(
+        response.data.data || []
+      );
+
+      setTotalPages(
+        response.data.totalPages
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  const tareasFiltradas =
+    (tareas || []).filter(
+      tarea =>
+        tarea.titulo
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+    );
+
+  return (
+
+    <MainLayout>
+
+      <div
+        style={{
+          maxWidth: "1400px",
+          margin: "0 auto"
+        }}
+      >
+
+        {/* HEADER */}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "30px"
+          }}
+        >
+
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "2.2rem",
+                color: "#1e293b"
+              }}
+            >
+              📋 Gestión de Tareas
+            </h1>
+
+            <p
+              style={{
+                color: "#64748b",
+                marginTop: "8px"
+              }}
+            >
+              Visualiza, filtra y administra las tareas del sistema.
+            </p>
+          </div>
+
+          {(user?.rol === "admin" || user?.rol === "lider") && (
+            <Link to="/tareas/nueva">
+              <button
+                style={{
+                  background: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  padding: "12px 18px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "1rem"
+                }}
+              >
+                ➕ Nueva Tarea
+              </button>
+            </Link>
+          )}
+
+        </div>
+
+        {/* METRICAS */}
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "15px",
+            marginBottom: "25px"
+          }}
+        >
+
+        </div>
+
+        {/* FILTROS */}
+
+        <div
+          style={{
+            background: "#fff",
+            padding: "20px",
+            borderRadius: "12px",
+            boreder: "1px solid #e5e7eb",
+            boxShadow:
+              "0 2px 10px rgba(0,0,0,0.08)",
+            marginBottom: "30px"
+          }}
+        >
+          <div>
+            <h3
+              style={{
+                marginTop: 0,
+                color: "#334155"
+              }}
+            >
+              🔎 Filtros y búsqueda
+            </h3>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(220px,1fr))",
+                gap: "15px"
+              }}
+            >
+
+              <input
+                type="text"
+                placeholder="Buscar por título..."
+                value={search}
+                onChange={e =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+                style={inputStyle}
+              />
+
+              <select
+                value={estado}
+                onChange={e => {
+
+                  setPage(1);
+
+                  setEstado(
+                    e.target.value
+                  );
+
+                }}
+                style={inputStyle}
+              >
+
+                <option value="">
+                  Todos los estados
+                </option>
+
+                <option value="pendiente">
+                  Pendiente
+                </option>
+
+                <option value="en_progreso">
+                  En progreso
+                </option>
+
+                <option value="bloqueada">
+                  Bloqueada
+                </option>
+
+                <option value="finalizada">
+                  Finalizada
+                </option>
+
+                <option value="cancelada">
+                  Cancelada
+                </option>
+
+              </select>
+
+              <select
+                value={prioridad}
+                onChange={e => {
+
+                  setPage(1);
+
+                  setPrioridad(
+                    e.target.value
+                  );
+
+                }}
+                style={inputStyle}
+              >
+
+                <option value="">
+                  Todas las prioridades
+                </option>
+
+                <option value="baja">
+                  Baja
+                </option>
+
+                <option value="media">
+                  Media
+                </option>
+
+                <option value="alta">
+                  Alta
+                </option>
+
+                <option value="critica">
+                  Crítica
+                </option>
+
+              </select>
+            </div>
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  marginTop: "15px",
+                  gap: "15px",
+                  flexWrap: "wrap"
+
+                }}
+              >
+                <label
+                  style={{
+                    marginTop: "14px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: "#475569"
+                  }}
+                >
+                  Ordenar por:
+                </label>
+
+                <select
+                  value={sortBy}
+                  onChange={e =>
+                    setSortBy(
+                      e.target.value
+                    )
+                  }
+                  style={inputStyle}
+                >
+
+                  <option value="createdAt">
+                    Fecha creación
+                  </option>
+
+                  <option value="titulo">
+                    Título
+                  </option>
+
+                  <option value="estado">
+                    Estado
+                  </option>
+
+                  <option value="prioridad">
+                    Prioridad
+                  </option>
+
+                  <option value="fechaLimite">
+                    Fecha límite
+                  </option>
+
+                </select>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "15px",
+                flexWrap: "wrap"
+              }}
+            >
+              <label
+                style={{
+                  marginBottom: "6px",
+                  marginTop: "14px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#475569"
+                }}
+              >
+                Dirección:
+              </label>
+
+              <select
+                value={order}
+                onChange={e =>
+                  setOrder(
+                    e.target.value
+                  )
+                }
+                style={inputStyle}
+              >
+
+                <option value="ASC">
+                  Ascendente ↑
+                </option>
+
+                <option value="DESC">
+                  Descendente ↓
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* LISTADO */}
+
+        {loading ? (
+
+          <div
+            style={{
+              textAlign: "center",
+              padding: "50px"
+            }}
+          >
+
+            <h3>
+              Cargando tareas...
+            </h3>
+
+          </div>
+
+        ) : (
+
+          <TareasList
+            tareas={
+              tareasFiltradas
+            }
+          />
+
+        )}
+
+        {/* PAGINACION */}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "20px",
+            marginTop: "30px",
+            marginBottom: "40px"
+          }}
+        >
+
+          <button
+            disabled={
+              page === 1
+            }
+            onClick={() =>
+              setPage(
+                prev => prev - 1
+              )
+            }
+            style={buttonStyle}
+          >
+            ← Anterior
+          </button>
+
+          <strong>
+            Página {page} de {totalPages}
+          </strong>
+
+          <button
+            disabled={
+              page === totalPages
+            }
+            onClick={() =>
+              setPage(
+                prev => prev + 1
+              )
+            }
+            style={buttonStyle}
+          >
+            Siguiente →
+          </button>
+
+        </div>
+
+      </div>
+
+    </MainLayout>
+
+  );
+
+}
+
+const cardStyle = {
+
+  background: "#fff",
+
+  borderRadius: "14px",
+
+  padding: "20px",
+
+  boxShadow:
+    "0 2px 10px rgba(0,0,0,0.08)",
+
+  textAlign: "center"
+
+};
+
+const inputStyle = {
+
+  padding: "12px",
+
+  borderRadius: "10px",
+
+  border:
+    "1px solid #cbd5e1",
+
+  fontSize: "14px"
+
+};
+
+const buttonStyle = {
+
+  padding:
+    "10px 18px",
+
+  border: "none",
+
+  borderRadius: "10px",
+
+  background:
+    "#2563eb",
+
+  color: "white",
+
+  cursor: "pointer",
+
+  fontWeight: "bold"
+
+};
+===== ./frontend/src/routes/AdminRoute.jsx =====
+import {
+  Navigate
+} from "react-router-dom";
+
+import {
+  useAuth
+} from "../context/AuthContext";
+
+export default function AdminRoute({
+  children
+}) {
+
+  const {
+    user
+  } = useAuth();
+
+  if (!user) {
+
+    return (
+      <Navigate
+        to="/login"
+      />
+    );
+
+  }
+
+  if (
+    user.rol !== "admin"
+  ) {
+
+    return (
+      <Navigate
+        to="/tareas"
+      />
+    );
+
+  }
+
+  return children;
+
+}
+===== ./frontend/src/routes/ProtectedRoute.jsx =====
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+export default function ProtectedRoute({ children }) {
+
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+===== ./frontend/src/styles/auth.css =====
+.auth-page {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #1e40af
+    );
+
+  padding: 20px;
+
+}
+
+.auth-card {
+
+  width: 100%;
+
+  max-width: 420px;
+
+  background: white;
+
+  padding: 40px;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.2);
+
+}
+
+.auth-title {
+
+  text-align: center;
+
+  margin-bottom: 10px;
+
+  color: #1e3a8a;
+
+  font-size: 2rem;
+
+}
+
+.auth-subtitle {
+
+  text-align: center;
+
+  color: #64748b;
+
+  margin-bottom: 30px;
+
+}
+
+.auth-error {
+
+  background: #fee2e2;
+
+  color: #b91c1c;
+
+  border: 1px solid #fecaca;
+
+  padding: 10px;
+
+  border-radius: 8px;
+
+  margin-bottom: 16px;
+
+  font-size: 0.95rem;
+
+}
+
+.auth-submit {
+
+  width: 100%;
+
+}
+
+.auth-footer {
+
+  margin-top: 25px;
+
+  text-align: center;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+}
+
+.auth-link-button {
+
+  border: none;
+
+  background: none;
+
+  color: #2563eb;
+
+  cursor: pointer;
+
+  font-weight: 600;
+
+  font-size: 0.95rem;
+
+}
+
+.auth-link-button:hover {
+
+  text-decoration: underline;
+
+}
+===== ./frontend/src/styles/buttons.css =====
+.btn {
+
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-weight: 600;
+
+}
+
+.btn-primary {
+
+  background: var(--primary);
+
+  color: white;
+
+}
+
+.btn-primary:hover {
+
+  background:
+    var(--primary-dark);
+
+}
+
+.btn-danger {
+
+  background:
+    var(--danger);
+
+  color: white;
+
+}
+
+.btn-secondary {
+
+  background:
+    #64748b;
+
+  color: white;
+
+}
+===== ./frontend/src/styles/cards.css =====
+.card {
+
+  background: white;
+
+  border-radius: 12px;
+
+  border:
+    1px solid var(--border);
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.08);
+
+  padding: 20px;
+
+}
+===== ./frontend/src/styles/dashboardPage.css =====
+.dashboard-loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+.dashboard-header {
+  margin-bottom: 35px;
+}
+
+.dashboard-title {
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.dashboard-subtitle {
+  margin: 0;
+  color: #6b7280;
+}
+
+.dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.dashboard-section {
+  margin-bottom: 40px;
+}
+
+.dashboard-section-title {
+  margin-bottom: 20px;
+}
+
+.dashboard-states-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.dashboard-state-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-state-name {
+  color: #6b7280;
+  margin-bottom: 10px;
+  text-transform: capitalize;
+}
+
+.dashboard-state-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.dashboard-alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.dashboard-alert-card {
+  border-radius: 16px;
+  padding: 25px;
+}
+
+.dashboard-overdue {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+}
+
+.dashboard-critical {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+}
+
+.dashboard-task-row {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-task-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard-responsables {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-responsables h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.dashboard-responsable-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 12px 0;
+
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.dashboard-responsable-row:last-child {
+  border-bottom: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===== ./frontend/src/styles/forms.css =====
+.form-container {
+
+  background: white;
+
+  padding: 30px;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 4px 15px rgba(0,0,0,0.08);
+
+}
+
+.form-group {
+
+  display: flex;
+
+  flex-direction: column;
+
+  margin-bottom: 18px;
+
+}
+
+.form-group label {
+
+  font-weight: 600;
+
+  margin-bottom: 6px;
+
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+
+  padding: 12px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 8px;
+
+  font-size: 1rem;
+
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+
+  outline: none;
+
+  border-color: var(--primary);
+
+}
+===== ./frontend/src/styles/layout.css =====
+.page-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 25px;
+
+}
+
+.section-title {
+
+  color: var(--text);
+
+  margin-bottom: 10px;
+
+}
+
+.grid {
+
+  display: grid;
+
+  gap: 20px;
+
+}
+
+.grid-3 {
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(300px, 1fr));
+
+}
+===== ./frontend/src/styles/navbar.css =====
+.navbar {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 14px 24px;
+
+  background-color: rgb(206, 206, 206);
+
+  border-bottom:
+    1px solid #e2e8f0;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.04);
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 100;
+
+}
+
+.navbar-logo {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+}
+
+.navbar-title {
+
+  font-size: 1.2rem;
+
+  font-weight: 700;
+
+  color: #1e293b;
+
+}
+
+.navbar-subtitle {
+
+  font-size: 0.8rem;
+
+  color: #64748b;
+
+}
+
+.navbar-links {
+
+  display: flex;
+
+  gap: 10px;
+
+}
+
+.nav-link {
+
+  text-decoration: none;
+
+  color: #475569;
+
+  padding: 8px 14px;
+
+  border-radius: 8px;
+
+  font-weight: 600;
+
+  transition: all 0.2s;
+
+}
+
+.nav-link:hover {
+
+  background: #e2e8f0;
+
+}
+
+.nav-link.active {
+
+  background: #2563eb;
+
+  color: white;
+
+}
+
+.navbar-user {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+}
+
+.user-info {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+
+}
+
+.role-badge {
+
+  background: #dbeafe;
+
+  color: #1d4ed8;
+
+  padding: 2px 8px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+}
+
+.logout-button {
+
+  border: none;
+
+  background: #ef4444;
+
+  color: white;
+
+  padding: 8px 14px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-weight: 600;
+
+  transition: background 0.2s;
+
+}
+
+.logout-button:hover {
+
+  background: #dc2626;
+
+}
+===== ./frontend/src/styles/proyecto-detalle.css =====
+.proyecto-detalle-loading {
+  text-align: center;
+  padding: 50px;
+}
+
+.proyecto-detalle-header {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.proyecto-detalle-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.proyecto-detalle-title {
+  margin: 0;
+}
+
+.proyecto-detalle-code {
+  margin-top: 8px;
+  color: #6b7280;
+}
+
+.proyecto-detalle-description {
+  margin-top: 20px;
+  color: #374151;
+  line-height: 1.7;
+}
+
+.proyecto-detalle-status {
+  color: white;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.proyecto-detalle-status-activo {
+  background-color: #16a34a;
+}
+
+.proyecto-detalle-status-pausado {
+  background-color: #f59e0b;
+}
+
+.proyecto-detalle-status-finalizado {
+  background-color: #6b7280;
+}
+
+.proyecto-detalle-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.proyecto-detalle-stat-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.proyecto-detalle-stat-label {
+  color: #6b7280;
+}
+
+.proyecto-detalle-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.proyecto-detalle-stat-blue {
+  color: #2563eb;
+}
+
+.proyecto-detalle-stat-green {
+  color: #16a34a;
+}
+
+.proyecto-detalle-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 25px;
+}
+
+.proyecto-detalle-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 25px;
+}
+
+.proyecto-detalle-panel-title {
+  margin-top: 0;
+}
+
+.proyecto-detalle-empty {
+  color: #6b7280;
+}
+
+.proyecto-detalle-user-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+}
+
+.proyecto-detalle-user-row small {
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.proyecto-detalle-task-card {
+  padding: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.proyecto-detalle-task-status {
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+@media (max-width: 900px) {
+  .proyecto-detalle-content {
+    grid-template-columns: 1fr;
+  }
+}
+===== ./frontend/src/styles/stat-card.css =====
+.stat-card {
+
+  background: white;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 16px;
+
+  padding: 24px;
+
+  box-shadow:
+    0 4px 12px rgba(
+      0,
+      0,
+      0,
+      0.06
+    );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+}
+
+.stat-card:hover {
+
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 8px 18px rgba(
+      0,
+      0,
+      0,
+      0.10
+    );
+
+}
+
+.stat-card-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 12px;
+
+}
+
+.stat-card-title {
+
+  color: #6b7280;
+
+  font-size: 0.95rem;
+
+  font-weight: 500;
+
+}
+
+.stat-card-icon {
+
+  font-size: 1.8rem;
+
+}
+
+.stat-card-value {
+
+  font-size: 2.8rem;
+
+  font-weight: 700;
+
+}
+
+.stat-card-value.proyectos {
+
+  color: #2563eb;
+
+}
+
+.stat-card-value.usuarios {
+
+  color: #7c3aed;
+
+}
+
+.stat-card-value.tareas {
+
+  color: #16a34a;
+
+}
+===== ./frontend/src/styles/tarea-card.css =====
+.tarea-card {
+
+  background: white;
+
+  border-radius: 12px;
+
+  padding: 18px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08);
+
+  display: flex;
+
+  flex-direction: column;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+}
+
+.tarea-card:hover {
+
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 8px 18px rgba(
+      0,
+      0,
+      0,
+      0.12
+    );
+
+}
+
+.tarea-card-header {
+
+  margin-bottom: 15px;
+
+}
+
+.tarea-card-id {
+
+  font-size: 0.75rem;
+
+  font-weight: 700;
+
+  color: #2563eb;
+
+  text-transform: uppercase;
+
+  margin-bottom: 6px;
+
+}
+
+.tarea-card-title {
+
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 1.35rem;
+
+  font-weight: 700;
+
+  line-height: 1.3;
+
+}
+
+.tarea-card-badges {
+
+  display: flex;
+
+  gap: 8px;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 15px;
+
+}
+
+.tarea-card-info {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  font-size: 0.9rem;
+
+  color: #64748b;
+
+  margin-bottom: 18px;
+
+}
+
+.tarea-card-actions {
+
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: auto;
+
+}
+
+.tarea-card-btn {
+
+  flex: 1;
+
+  text-align: center;
+
+  text-decoration: none;
+
+  padding: 10px;
+
+  border-radius: 8px;
+
+  color: white;
+
+  font-weight: 600;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+
+}
+
+.tarea-card-btn:hover {
+
+  opacity: 0.9;
+
+  transform:
+    translateY(-1px);
+
+}
+
+.tarea-card-btn-primary {
+
+  background: #2563eb;
+
+}
+
+.tarea-card-btn-warning {
+
+  background: #d97706;
+
+}
+===== ./frontend/src/styles/tarea-detalle.css =====
+.tarea-detalle-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tarea-detalle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tarea-detalle-id {
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.tarea-detalle-title {
+  margin: 5px 0;
+  color: #111827;
+}
+
+.tarea-detalle-badges {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tarea-detalle-description {
+  margin-bottom: 20px;
+}
+
+.tarea-detalle-description p {
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+.tarea-detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.tarea-detalle-card h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.tarea-detalle-card p {
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.tarea-detalle-card p:last-child {
+  margin-bottom: 0;
+}
+===== ./frontend/src/styles/TareaFormPage.css =====
+.tarea-form-container {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.tarea-form-header {
+  margin-bottom: 25px;
+}
+
+.tarea-form-header h1 {
+  margin-bottom: 5px;
+}
+
+.tarea-form-header p {
+  color: #6b7280;
+}
+
+.tarea-form-card {
+  background: white;
+  border-radius: 14px;
+  padding: 30px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid #d1d5db;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+}
+===== ./frontend/src/styles/variables.css =====
+:root {
+
+  --primary:
+    #2563eb;
+
+  --primary-dark:
+    #1d4ed8;
+
+  --success:
+    #16a34a;
+
+  --danger:
+    #dc2626;
+
+  --warning:
+    #f59e0b;
+
+  --background:
+    #f5f7fb;
+
+  --surface:
+    #ffffff;
+
+  --border:
+    #e5e7eb;
+
+  --text:
+    #111827;
+
+  --text-light:
+    #6b7280;
+
+  --radius:
+    12px;
+
+}

@@ -37,6 +37,18 @@ export function updateProyecto(
 
 }
 
+export function setIntegrantesProyecto(
+  id,
+  integrantes
+) {
+
+  return api.patch(
+    `/proyectos/${id}/integrantes`,
+    { integrantes }
+  );
+
+}
+
 export function deleteProyecto(id) {
 
   return api.delete(
