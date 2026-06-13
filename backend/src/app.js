@@ -7,7 +7,7 @@ const tareasRoutes = require("./routes/tareas.routes");
 const proyectosRoutes = require("./routes/proyectos.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const errorHandler = require("./middlewares/error.middleware");
-const usuariosRoutes = require( "./routes/usuarios.routes");
+const usuariosRoutes = require("./routes/usuarios.routes");
 
 const app = express();
 

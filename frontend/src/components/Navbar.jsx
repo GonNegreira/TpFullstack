@@ -24,17 +24,12 @@ export default function Navbar() {
     useLocation();
 
   function handleLogout() {
-
     logout();
-
     navigate("/login");
-
   }
 
   function isActive(path) {
-
-    return location.pathname.startsWith(path);
-
+    return location.pathname === path;  // <- exacto en vez de startsWith
   }
 
   return (
@@ -46,15 +41,11 @@ export default function Navbar() {
         <div>
 
           <div className="navbar-title">
-
             DDS Tracker
-
           </div>
 
           <div className="navbar-subtitle">
-
             Gestión de Proyectos
-
           </div>
 
         </div>
@@ -85,60 +76,46 @@ export default function Navbar() {
           📁 Proyectos
         </Link>
 
-        {
+        {user?.rol === "admin" && (
 
-          user?.rol === "admin" && (
+          <Link
+            to="/tareas/resumen"          // <- ruta corregida
+            className={
+              isActive("/tareas/resumen") // <- ruta corregida
+                ? "nav-link active"
+                : "nav-link"
+            }
+          >
+            📊 Resumen                    
+          </Link>
 
-            <Link
-              to="/tareas/resumen"
-              className={
-                isActive("/dashboard")
-                  ? "nav-link active"
-                  : "nav-link"
-              }
-            >
-              📊 Dashboard
-            </Link>
-
-          )
-
-        }
+        )}
 
       </div>
 
       <div className="navbar-user">
 
-        {
+        {user && (
 
-          user && (
+          <div className="user-info">
 
-            <div className="user-info">
+            <strong>
+              {user.nombre}
+            </strong>
 
-              <strong>
+            <span className="role-badge">
+              {user.rol}
+            </span>
 
-                {user.nombre}
+          </div>
 
-              </strong>
-
-              <span className="role-badge">
-
-                {user.rol}
-
-              </span>
-
-            </div>
-
-          )
-
-        }
+        )}
 
         <button
           onClick={handleLogout}
           className="logout-button"
         >
-
           Salir
-
         </button>
 
       </div>

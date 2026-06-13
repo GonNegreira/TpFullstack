@@ -247,27 +247,219 @@ export default function TareaDetallePage() {
 
         </div>
 
-        <div className="card" style={{ marginTop: "20px", padding: "20px" }}>
-          <h3>📋 Historial de cambios</h3>
+        <div
+          className="card"
+          style={{
+            marginTop: "20px",
+            padding: "24px"
+          }}
+        >
+          <h3
+            style={{
+              marginBottom: "20px",
+              fontSize: "1.2rem"
+            }}
+          >
+            📋 Historial de cambios
+          </h3>
+
           {historial.length === 0 ? (
-            <p style={{ color: "#6b7280" }}>Sin historial registrado.</p>
+
+            <p style={{ color: "#6b7280" }}>
+              Sin historial registrado.
+            </p>
+
           ) : (
-            <ul style={{ listStyle: "none", padding: 0 }}>
-              {historial.map(h => (
-                <li key={h.id} style={{ borderBottom: "1px solid #e5e7eb", padding: "10px 0" }}>
-                  <strong>{h.accion}</strong>
-                  <span style={{ color: "#6b7280", marginLeft: "10px", fontSize: "0.85rem" }}>
-                    {new Date(h.fechaHora).toLocaleString()}
-                  </span>
-                  {h.valorAnterior && (
-                    <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                      Antes: {JSON.stringify(h.valorAnterior)}
+
+            <div>
+
+              {historial.map((h, index) => (
+
+                <div
+                  key={h.id}
+                  style={{
+                    display: "flex",
+                    gap: "16px",
+                    marginBottom:
+                      index === historial.length - 1
+                        ? 0
+                        : "18px"
+                  }}
+                >
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center"
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        width: "12px",
+                        height: "12px",
+                        borderRadius: "50%",
+                        background: "#2563eb",
+                        marginTop: "6px"
+                      }}
+                    />
+
+                    {index !== historial.length - 1 && (
+
+                      <div
+                        style={{
+                          width: "2px",
+                          flex: 1,
+                          background: "#e5e7eb",
+                          marginTop: "4px"
+                        }}
+                      />
+
+                    )}
+
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      paddingBottom: "12px"
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "8px"
+                      }}
+                    >
+
+                      <strong
+                        style={{
+                          color: "#111827"
+                        }}
+                      >
+                        {h.accion}
+                      </strong>
+
+                      <span
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#6b7280"
+                        }}
+                      >
+                        {new Date(
+                          h.fechaHora
+                        ).toLocaleString()}
+                      </span>
+
                     </div>
-                  )}
-                </li>
+
+                    {h.valorAnterior && (
+
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "10px",
+                          background: "#f8fafc",
+                          borderRadius: "8px",
+                          fontSize: "0.85rem",
+                          color: "#475569",
+                          overflowX: "auto"
+                        }}
+                      >
+
+                        <strong>
+                          Valor antes del cambio
+                        </strong>
+
+                        {(() => {
+
+                          let valor = h.valorAnterior;
+
+                          if (typeof valor === "string") {
+
+                            try {
+
+                              valor = JSON.parse(valor);
+
+                            } catch {
+
+                              return (
+                                <div>
+                                  {h.valorAnterior}
+                                </div>
+                              );
+
+                            }
+
+                          }
+
+                          return Object.entries(valor).map(
+                            ([campo, contenido]) => (
+
+                              <div
+                                key={campo}
+                                style={{
+                                  marginBottom: "4px"
+                                }}
+                              >
+
+                                <strong>
+
+                                  {campo === "titulo" && "Título"}
+                                  {campo === "descripcion" && "Descripción"}
+                                  {campo === "prioridad" && "Prioridad"}
+                                  {campo === "estado" && "Estado"}
+                                  {campo === "fechaLimite" && "Fecha límite"}
+                                  {campo === "responsableId" && "Responsable"}
+
+                                  {![
+                                    "titulo",
+                                    "descripcion",
+                                    "prioridad",
+                                    "estado",
+                                    "fechaLimite",
+                                    "responsableId"
+                                  ].includes(campo)
+                                    ? campo
+                                    : ""}
+
+                                  :
+
+                                </strong>
+
+                                {" "}
+
+                                {campo === "fechaLimite"
+                                  ? new Date(
+                                    contenido
+                                  ).toLocaleDateString()
+                                  : String(contenido)}
+
+                              </div>
+
+                            )
+                          );
+
+                        })()}
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+                </div>
+
               ))}
-            </ul>
+
+            </div>
+
           )}
+
         </div>
 
       </div>

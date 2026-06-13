@@ -14,21 +14,22 @@ const {
 const AppError =
   require("../utils/AppError");
 
-const { Op } =
+const { Op, literal } =        // <- mover acá, fuera de la función
   require("sequelize");
 
 const PRIORIDADES_VALIDAS = ["baja", "media", "alta", "critica"];
 
 async function getAll(filtros = {}) {
   const where = {};
-  const { proyectoId, responsableId, estado, prioridad, page, limit, sortBy, order } = filtros;
+  const { proyectoId, responsableId, estado, prioridad, page, limit, sortBy, order, search } = filtros;
 
   if (proyectoId) where.proyectoId = proyectoId;
   if (responsableId) where.responsableId = responsableId;
   if (estado) where.estado = estado;
   if (prioridad) where.prioridad = prioridad;
-
-  const { literal } = require("sequelize");
+  if (search) {
+    where.titulo = { [Op.like]: `%${search}%` };
+  }
 
   const camposOrdenables = ["id", "titulo", "prioridad", "estado", "fechaLimite", "createdAt"];
   const orden = [];
@@ -38,11 +39,11 @@ async function getAll(filtros = {}) {
       const dir = order === "DESC" ? "DESC" : "ASC";
       orden.push([
         literal(`CASE prioridad
-        WHEN 'baja'    THEN 1
-        WHEN 'media'   THEN 2
-        WHEN 'alta'    THEN 3
-        WHEN 'critica' THEN 4
-        END`),
+          WHEN 'baja'    THEN 1
+          WHEN 'media'   THEN 2
+          WHEN 'alta'    THEN 3
+          WHEN 'critica' THEN 4
+          END`),
         dir
       ]);
     } else {

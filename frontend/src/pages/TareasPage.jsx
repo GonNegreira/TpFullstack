@@ -1,4 +1,3 @@
-// TareasPage.jsx
 import {
   useEffect,
   useState
@@ -13,13 +12,14 @@ import MainLayout
 import TareasList
   from "../components/TareasList";
 
-import {
-  getTareas
-} from "../api/tareas.service";
+import {getUsuarios}
+  from "../api/usuarios.service"
 
-import {
-  getProyectos
-} from "../api/proyectos.service";
+import { getTareas }
+  from "../api/tareas.service";
+
+import { getProyectos }
+  from "../api/proyectos.service";
 
 export default function TareasPage() {
 
@@ -31,6 +31,12 @@ export default function TareasPage() {
   const [loading, setLoading] =
     useState(false);
 
+  const [responsableId, setResponsableId] =
+    useState("");
+
+  const [search, setSearch] =
+    useState("");
+
   const [estado, setEstado] =
     useState("");
 
@@ -41,6 +47,9 @@ export default function TareasPage() {
     useState("");
 
   const [proyectos, setProyectos] =
+    useState([]);
+
+  const [usuarios, setUsuarios] =
     useState([]);
 
   const [sortBy, setSortBy] =
@@ -55,72 +64,60 @@ export default function TareasPage() {
   const [totalPages, setTotalPages] =
     useState(1);
 
-  const [search, setSearch] =
-    useState("");
-
-  // Carga proyectos una sola vez para el filtro
   useEffect(() => {
     getProyectos()
       .then(r => setProyectos(r.data))
       .catch(console.error);
   }, []);
 
-  // Recarga tareas cada vez que cambia un filtro
+  useEffect(() => {
+    getProyectos()
+      .then(r => setProyectos(r.data))
+      .catch(console.error);
+
+    getUsuarios()
+      .then(r => setUsuarios(r.data))
+      .catch(console.error);
+  }, []);
+
   useEffect(() => {
     loadTareas();
   }, [
     estado,
     prioridad,
     proyectoId,
+    responsableId,
     sortBy,
     order,
-    page
+    page,
+    search
   ]);
 
   async function loadTareas() {
-
     try {
-
       setLoading(true);
 
-      const response =
-        await getTareas({
-          estado,
-          prioridad,
-          proyectoId: proyectoId || undefined,
-          sortBy,
-          order,
-          page,
-          limit: 10
-        });
+      const response = await getTareas({
+        estado,
+        prioridad,
+        proyectoId: proyectoId || undefined,
+        responsableId: responsableId || undefined,
+        search: search || undefined,
+        sortBy,
+        order,
+        page,
+        limit: 10
+      });
 
-      setTareas(
-        response.data.data || []
-      );
-
-      setTotalPages(
-        response.data.totalPages
-      );
+      setTareas(response.data.data || []);
+      setTotalPages(response.data.totalPages);
 
     } catch (error) {
-
       console.error(error);
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
-
-  const tareasFiltradas =
-    (tareas || []).filter(
-      tarea =>
-        tarea.titulo
-          .toLowerCase()
-          .includes(search.toLowerCase())
-    );
 
   return (
 
@@ -155,12 +152,7 @@ export default function TareasPage() {
               📋 Gestión de Tareas
             </h1>
 
-            <p
-              style={{
-                color: "#64748b",
-                marginTop: "8px"
-              }}
-            >
+            <p style={{ color: "#64748b", marginTop: "8px" }}>
               Visualiza, filtra y administra las tareas del sistema.
             </p>
           </div>
@@ -199,12 +191,7 @@ export default function TareasPage() {
           }}
         >
 
-          <h3
-            style={{
-              marginTop: 0,
-              color: "#334155"
-            }}
-          >
+          <h3 style={{ marginTop: 0, color: "#334155" }}>
             🔎 Filtros y búsqueda
           </h3>
 
@@ -221,7 +208,10 @@ export default function TareasPage() {
               type="text"
               placeholder="Buscar por título..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => {
+                setPage(1);
+                setSearch(e.target.value);
+              }}
               style={inputStyle}
             />
 
@@ -233,12 +223,26 @@ export default function TareasPage() {
               }}
               style={inputStyle}
             >
-              <option value="">
-                Todos los proyectos
-              </option>
+              <option value="">Todos los proyectos</option>
               {proyectos.map(p => (
                 <option key={p.id} value={p.id}>
                   {p.nombre}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={responsableId}
+              onChange={e => {
+                setPage(1);
+                setResponsableId(e.target.value);
+              }}
+              style={inputStyle}
+            >
+              <option value="">Todos los responsables</option>
+              {usuarios.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.nombre}
                 </option>
               ))}
             </select>
@@ -325,19 +329,14 @@ export default function TareasPage() {
 
         {loading ? (
 
-          <div
-            style={{
-              textAlign: "center",
-              padding: "50px"
-            }}
-          >
+          <div style={{ textAlign: "center", padding: "50px" }}>
             <h3>Cargando tareas...</h3>
           </div>
 
         ) : (
 
           <TareasList
-            tareas={tareasFiltradas}
+            tareas={tareas}
             onRefresh={loadTareas}
           />
 
