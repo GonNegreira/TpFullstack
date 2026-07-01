@@ -1,0 +1,3112 @@
+===== ./backend/src/app.js =====
+const express = require("express");
+const cors = require("cors");
+
+const authRoutes = require("./routes/auth.routes");
+const testRoutes = require("./routes/test.routes");
+const tareasRoutes = require("./routes/tareas.routes");
+const proyectosRoutes = require("./routes/proyectos.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const errorHandler = require("./middlewares/error.middleware");
+const usuariosRoutes = require("./routes/usuarios.routes");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/auth", authRoutes);
+app.use("/api/test", testRoutes);
+app.use("/api/tareas", tareasRoutes);
+app.use("/api/proyectos", proyectosRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/usuarios", usuariosRoutes);
+
+app.use(errorHandler);
+
+module.exports = app;
+===== ./backend/src/config/database.js =====
+const { Sequelize } = require("sequelize");
+
+const storage =
+  process.env.NODE_ENV === "test"
+    ? ":memory:"
+    : "./database.sqlite";
+
+const sequelize = new Sequelize({
+  dialect: "sqlite",
+  storage,
+  logging: false
+});
+
+module.exports = sequelize;
+===== ./backend/src/config/jwt.js =====
+require("dotenv").config();
+
+module.exports = {
+  secret: process.env.JWT_SECRET,
+  expiresIn: process.env.JWT_EXPIRES_IN,
+};
+===== ./backend/src/controllers/auth.controller.js =====
+const authService =
+  require("../services/auth.service");
+
+async function register(
+  req,
+  res,
+  next
+) {
+  try {
+
+    const usuario =
+      await authService.register(
+        req.body
+      );
+
+    res.status(201).json(usuario);
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function login(
+  req,
+  res,
+  next
+) {
+  try {
+
+    const resultado =
+      await authService.login(
+        req.body.email,
+        req.body.password
+      );
+
+    res.json(resultado);
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  register,
+  login,
+};
+===== ./backend/src/controllers/dashboard.controller.js =====
+const { Op } = require("sequelize");
+const { Proyecto, Tarea, Usuario } = require("../models");
+
+async function resumen(req, res, next) {
+  try {
+    const totalProyectos = await Proyecto.count();
+    const totalUsuarios = await Usuario.count();
+
+    const tareas = await Tarea.findAll({
+      include: [{ model: Usuario, as: "responsable" }]
+    });
+
+    const ahora = new Date();
+
+    const tareasVencidas = tareas.filter(t =>
+      new Date(t.fechaLimite) < ahora &&
+      t.estado !== "finalizada" &&
+      t.estado !== "cancelada"
+    );
+
+    const tareasCriticas = tareas.filter(t => t.prioridad === "critica");
+
+    const tareasPorResponsable = {};
+    for (const t of tareas) {
+      const nombre = t.responsable ? t.responsable.nombre : "Sin responsable";
+      if (!tareasPorResponsable[nombre]) tareasPorResponsable[nombre] = 0;
+      tareasPorResponsable[nombre]++;
+    }
+
+    res.json({
+      totalProyectos,
+      totalUsuarios,
+      totalTareas: tareas.length,
+      tareasPorEstado: {
+        pendiente: tareas.filter(t => t.estado === "pendiente").length,
+        en_progreso: tareas.filter(t => t.estado === "en_progreso").length,
+        bloqueada: tareas.filter(t => t.estado === "bloqueada").length,
+        finalizada: tareas.filter(t => t.estado === "finalizada").length,
+        cancelada: tareas.filter(t => t.estado === "cancelada").length,
+      },
+      tareasVencidas: {
+        cantidad: tareasVencidas.length,
+        tareas: tareasVencidas.map(t => ({
+          id: t.id,
+          titulo: t.titulo,
+          fechaLimite: t.fechaLimite,
+          estado: t.estado,
+          responsable: t.responsable ? t.responsable.nombre : null,
+        })),
+      },
+      tareasCriticas: {
+        cantidad: tareasCriticas.length,
+        tareas: tareasCriticas.map(t => ({
+          id: t.id,
+          titulo: t.titulo,
+          estado: t.estado,
+          responsable: t.responsable ? t.responsable.nombre : null,
+        })),
+      },
+      tareasPorResponsable,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { resumen };
+===== ./backend/src/controllers/proyectos.controller.js =====
+const proyectosService =
+  require(
+    "../services/proyectos.service"
+  );
+
+async function getAll(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyectos =
+      await proyectosService.getAll();
+
+    res.json(proyectos);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function getById(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService.getById(
+        req.params.id
+      );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function create(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService.create(
+        req.body
+      );
+
+    res
+      .status(201)
+      .json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function pausar(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService
+        .pausar(
+          req.params.id
+        );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function reactivar(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService
+        .reactivar(
+          req.params.id
+        );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function finalizar(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService
+        .finalizar(
+          req.params.id
+        );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function estadisticas(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const estadisticas =
+      await proyectosService.getEstadisticas(
+        req.params.id
+      );
+
+    res.json(
+      estadisticas
+    );
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function update(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService.update(
+        req.params.id,
+        req.body
+      );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function remove(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const resultado =
+      await proyectosService.remove(
+        req.params.id
+      );
+
+    res.json(resultado);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function setIntegrantes(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const proyecto =
+      await proyectosService.setIntegrantes(
+        req.params.id,
+        req.body.integrantes
+      );
+
+    res.json(proyecto);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+module.exports = {
+
+  getAll,
+
+  getById,
+
+  create,
+
+  update,
+
+  remove,
+
+  estadisticas,
+
+  pausar,
+
+  reactivar,
+
+  finalizar,
+
+  setIntegrantes
+
+};
+
+===== ./backend/src/controllers/tareas.controller.js =====
+const tareasService =
+  require("../services/tareas.service");
+
+async function getAll(req, res, next) {
+  try {
+    const tareas =
+      await tareasService.getAll(req.query);
+    res.json(tareas);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getById(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.getById(req.params.id);
+    res.json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function create(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.create(req.body);
+    res.status(201).json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function update(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.update(
+        req.params.id,
+        req.body,
+        req.user.id
+      );
+    res.json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function iniciar(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.iniciar(
+        req.params.id,
+        req.user.id
+      );
+    res.json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function bloquear(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.bloquear(
+        req.params.id,
+        req.user.id
+      );
+    res.json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function finalizar(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.finalizar(
+        req.params.id,
+        req.user.id
+      );
+    res.json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function cancelar(req, res, next) {
+  try {
+    const tarea =
+      await tareasService.cancelar(
+        req.params.id,
+        req.user.id
+      );
+    res.json(tarea);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function historial(req, res, next) {
+  try {
+    const resultado =
+      await tareasService.getHistorial(req.params.id);
+    res.json(resultado);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  getAll,
+  getById,
+  create,
+  update,
+  iniciar,
+  bloquear,
+  finalizar,
+  cancelar,
+  historial
+};
+===== ./backend/src/controllers/usuarios.controller.js =====
+const usuariosService =
+  require(
+    "../services/usuarios.service"
+  );
+
+async function getAll(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const usuarios =
+      await usuariosService.getAll();
+
+    res.json(
+      usuarios
+    );
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function getById(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const usuario =
+      await usuariosService.getById(
+        req.params.id
+      );
+
+    res.json(
+      usuario
+    );
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+async function getActivos(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const usuarios =
+      await usuariosService.getActivos();
+
+    res.json(
+      usuarios
+    );
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+}
+
+module.exports = {
+
+  getAll,
+
+  getById,
+
+  getActivos
+
+};
+===== ./backend/src/middlewares/auth.middleware.js =====
+const {
+  verifyToken,
+} = require("../utils/jwt");
+
+function authenticateJWT(
+  req,
+  res,
+  next
+) {
+
+  const header =
+    req.headers.authorization;
+
+  if (!header) {
+    return res.status(401).json({
+      error:
+        "Token no proporcionado",
+    });
+  }
+
+  const token =
+    header.split(" ")[1];
+
+  try {
+
+    const payload =
+      verifyToken(token);
+
+    req.user = payload;
+
+    next();
+
+  } catch {
+
+    return res.status(401).json({
+      error: "Token inválido",
+    });
+  }
+}
+
+module.exports =
+  authenticateJWT;
+===== ./backend/src/middlewares/authorize.middleware.js =====
+function authorize(...rolesPermitidos) {
+
+  return (req, res, next) => {
+
+    const rolUsuario =
+      req.user.rol;
+
+    if (
+      !rolesPermitidos.includes(
+        rolUsuario
+      )
+    ) {
+
+      return res.status(403).json({
+        error:
+          "No tiene permisos para realizar esta acción"
+      });
+
+    }
+
+    next();
+
+  };
+
+}
+
+module.exports =
+  authorize;
+===== ./backend/src/middlewares/autorizarTarea.middleware.js =====
+const { Tarea } = require("../models");
+
+async function autorizarTarea(req, res, next) {
+  try {
+    const tarea = await Tarea.findByPk(req.params.id);
+    if (!tarea) {
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+
+    if (req.user.rol === "admin" || req.user.rol === "lider") {
+      req.tarea = tarea;
+      return next();
+    }
+
+    if (req.user.rol === "colaborador" && Number(req.user.id) === tarea.responsableId) {
+      req.tarea = tarea;
+      return next();
+    }
+
+    return res.status(403).json({ error: "No tiene permisos para modificar esta tarea" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = autorizarTarea;
+===== ./backend/src/middlewares/error.middleware.js =====
+function errorHandler(
+  err,
+  req,
+  res,
+  next
+) {
+
+  console.error(err);
+
+  res.status(
+    err.statusCode || 500
+  ).json({
+    error:
+      err.message ||
+      "Error interno",
+  });
+}
+
+module.exports =
+  errorHandler;
+===== ./backend/src/models/HistorialTarea.js =====
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+
+const HistorialTarea = sequelize.define(
+  "HistorialTarea",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    accion: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    fechaHora: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+
+    valorAnterior: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+
+    valorNuevo: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+  },
+  {
+    tableName: "historial_tareas",
+    timestamps: false,
+  }
+);
+
+module.exports = HistorialTarea;
+===== ./backend/src/models/index.js =====
+const Usuario = require("./Usuario");
+const Proyecto = require("./Proyecto");
+const Tarea = require("./Tarea");
+const HistorialTarea = require("./HistorialTarea");
+
+
+// ======================================
+// USUARIOS <-> PROYECTOS
+// ======================================
+
+Usuario.belongsToMany(Proyecto, {
+  through: "ProyectoUsuarios",
+  foreignKey: "usuarioId",
+});
+
+Proyecto.belongsToMany(Usuario, {
+  through: "ProyectoUsuarios",
+  foreignKey: "proyectoId",
+});
+
+
+// ======================================
+// PROYECTO -> TAREAS
+// ======================================
+
+Proyecto.hasMany(Tarea, {
+  foreignKey: "proyectoId",
+});
+
+Tarea.belongsTo(Proyecto, {
+  foreignKey: "proyectoId",
+});
+
+
+// ======================================
+// RESPONSABLE DE TAREA
+// ======================================
+
+Usuario.hasMany(Tarea, {
+  foreignKey: "responsableId",
+});
+
+Tarea.belongsTo(Usuario, {
+  as: "responsable",
+  foreignKey: "responsableId",
+});
+
+
+// ======================================
+// TAREA -> HISTORIAL
+// ======================================
+
+Tarea.hasMany(HistorialTarea, {
+  foreignKey: "tareaId",
+});
+
+HistorialTarea.belongsTo(Tarea, {
+  foreignKey: "tareaId",
+});
+
+
+// ======================================
+// USUARIO QUE REALIZÓ EL CAMBIO
+// ======================================
+
+Usuario.hasMany(HistorialTarea, {
+  foreignKey: "usuarioId",
+});
+
+HistorialTarea.belongsTo(Usuario, {
+  foreignKey: "usuarioId",
+});
+
+module.exports = {
+  Usuario,
+  Proyecto,
+  Tarea,
+  HistorialTarea,
+};
+===== ./backend/src/models/Proyecto.js =====
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+
+const Proyecto = sequelize.define(
+  "Proyecto",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    codigo: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+
+    nombre: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    descripcion: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+
+    estado: {
+      type: DataTypes.ENUM(
+        "activo",
+        "pausado",
+        "finalizado"
+      ),
+      allowNull: false,
+    },
+  },
+  {
+    tableName: "proyectos",
+    timestamps: false,
+  }
+);
+
+module.exports = Proyecto;
+===== ./backend/src/models/Tarea.js =====
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+
+const Tarea = sequelize.define(
+  "Tarea",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    titulo: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    descripcion: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+
+    prioridad: {
+      type: DataTypes.ENUM(
+        "baja",
+        "media",
+        "alta",
+        "critica"
+      ),
+      allowNull: false,
+    },
+
+    estado: {
+      type: DataTypes.ENUM(
+        "pendiente",
+        "en_progreso",
+        "bloqueada",
+        "finalizada",
+        "cancelada"
+      ),
+      allowNull: false,
+      defaultValue: "pendiente",
+    },
+
+    fechaLimite: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+  },
+  {
+    tableName: "tareas",
+
+    timestamps: true,
+
+    createdAt: true,
+
+    updatedAt: false,
+  }
+);
+
+module.exports = Tarea;
+===== ./backend/src/models/Usuario.js =====
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+
+const Usuario = sequelize.define(
+  "Usuario",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    nombre: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+
+    passwordHash: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    rol: {
+      type: DataTypes.ENUM(
+        "admin",
+        "lider",
+        "colaborador"
+      ),
+      allowNull: false,
+    },
+
+    activo: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+  },
+  {
+    tableName: "usuarios",
+    timestamps: false,
+  }
+);
+
+module.exports = Usuario;
+===== ./backend/src/routes/auth.routes.js =====
+const express =
+  require("express");
+
+const router =
+  express.Router();
+
+const authController =
+  require("../controllers/auth.controller");
+
+router.post(
+  "/register",
+  authController.register
+);
+
+router.post(
+  "/login",
+  authController.login
+);
+
+module.exports = router;
+===== ./backend/src/routes/dashboard.routes.js =====
+const express =
+  require("express");
+
+const router =
+  express.Router();
+
+const controller =
+  require(
+    "../controllers/dashboard.controller"
+  );
+
+const authenticateJWT =
+  require(
+    "../middlewares/auth.middleware"
+  );
+
+const authorize =
+  require(
+    "../middlewares/authorize.middleware"
+  );
+
+router.get(
+  "/",
+  authenticateJWT,
+  authorize("admin"),
+  controller.resumen
+);
+
+module.exports =
+  router;
+===== ./backend/src/routes/proyectos.routes.js =====
+const express =
+  require("express");
+
+const router =
+  express.Router();
+
+const controller =
+  require(
+    "../controllers/proyectos.controller"
+  );
+
+const authenticateJWT =
+  require(
+    "../middlewares/auth.middleware"
+  );
+
+const authorize =
+  require(
+    "../middlewares/authorize.middleware"
+  );
+
+router.get(
+  "/",
+  authenticateJWT,
+  controller.getAll
+);
+
+router.get(
+  "/:id",
+  authenticateJWT,
+  controller.getById
+);
+
+router.post(
+  "/",
+  authenticateJWT,
+  authorize("admin"),
+  controller.create
+);
+
+router.put(
+  "/:id",
+  authenticateJWT,
+  authorize("admin"),
+  controller.update
+);
+
+router.delete(
+  "/:id",
+  authenticateJWT,
+  authorize("admin"),
+  controller.remove
+);
+
+router.patch(
+  "/:id/pausar",
+  authenticateJWT,
+  authorize("admin"),
+  controller.pausar
+);
+
+router.patch(
+  "/:id/reactivar",
+  authenticateJWT,
+  authorize("admin"),
+  controller.reactivar
+);
+
+router.patch(
+  "/:id/finalizar",
+  authenticateJWT,
+  authorize("admin"),
+  controller.finalizar
+);
+
+// Reemplaza todos los integrantes del proyecto
+router.patch(
+  "/:id/integrantes",
+  authenticateJWT,
+  authorize("admin"),
+  controller.setIntegrantes
+);
+
+module.exports = router;
+
+===== ./backend/src/routes/tareas.routes.js =====
+const express =
+  require("express");
+
+const router =
+  express.Router();
+
+const controller =
+  require("../controllers/tareas.controller");
+
+const authenticateJWT =
+  require("../middlewares/auth.middleware");
+
+const authorize = require("../middlewares/authorize.middleware");
+
+const autorizarTarea = require("../middlewares/autorizarTarea.middleware");
+
+const tareaValidator =
+  require("../validators/validateTarea.middleware");
+
+const dashboardController =
+  require("../controllers/dashboard.controller");
+
+router.get(
+  "/",
+  authenticateJWT,
+  controller.getAll
+);
+
+router.get(
+  "/resumen",
+  authenticateJWT,
+  authorize("admin"),
+  dashboardController.resumen
+);
+
+router.get(
+  "/:id",
+  authenticateJWT,
+  controller.getById
+);
+
+router.post(
+  "/",
+  authenticateJWT,
+  tareaValidator.validateCreateTarea,
+  controller.create
+);
+
+router.put(
+  "/:id",
+  authenticateJWT,
+  tareaValidator.validateUpdateTarea,
+  controller.update
+);
+
+router.patch("/:id/iniciar", authenticateJWT, autorizarTarea, controller.iniciar);
+router.patch("/:id/bloquear", authenticateJWT, autorizarTarea, controller.bloquear);
+router.patch("/:id/finalizar", authenticateJWT, autorizarTarea, authorize("admin", "lider"), controller.finalizar);
+router.patch("/:id/cancelar", authenticateJWT, autorizarTarea, authorize("admin", "lider"), controller.cancelar);
+
+router.get(
+  "/:id/historial",
+  authenticateJWT,
+  controller.historial
+);
+
+module.exports = router;
+===== ./backend/src/routes/test.routes.js =====
+const express =
+  require("express");
+
+const router =
+  express.Router();
+
+const authenticateJWT =
+  require("../middlewares/auth.middleware");
+
+router.get(
+  "/private",
+  authenticateJWT,
+  (req, res) => {
+
+    res.json({
+      mensaje:
+        "Ruta protegida",
+      usuario:
+        req.user,
+    });
+  }
+);
+
+module.exports = router;
+===== ./backend/src/routes/usuarios.routes.js =====
+const express =
+  require("express");
+
+const router =
+  express.Router();
+
+const controller =
+  require(
+    "../controllers/usuarios.controller"
+  );
+
+const authenticateJWT =
+  require(
+    "../middlewares/auth.middleware"
+  );
+
+router.get(
+  "/",
+  authenticateJWT,
+  controller.getAll
+);
+
+router.get(
+  "/activos",
+  authenticateJWT,
+  controller.getActivos
+);
+
+router.get(
+  "/:id",
+  authenticateJWT,
+  controller.getById
+);
+
+module.exports = router;
+===== ./backend/src/seeds/seed.js =====
+const bcrypt = require("bcrypt");
+
+const {
+  Usuario,
+  Proyecto,
+  Tarea,
+  HistorialTarea,
+} = require("../models");
+
+async function seedDatabase() {
+
+  console.log("Iniciando carga de semillas...");
+
+  // ==========================================
+  // LIMPIEZA
+  // ==========================================
+
+  await Tarea.destroy({ where: {}, force: true });
+
+  await Proyecto.destroy({ where: {}, force: true });
+
+  await Usuario.destroy({ where: {}, force: true });
+
+  // ==========================================
+  // USUARIOS
+  // ==========================================
+
+  const passwordHash = await bcrypt.hash(
+    "123456",
+    10
+  );
+
+  const usuarios = await Usuario.bulkCreate([
+    {
+      nombre: "Administrador",
+      email: "admin@dds.com",
+      passwordHash,
+      rol: "admin",
+      activo: true,
+    },
+    {
+      nombre: "Lider Proyecto",
+      email: "lider@dds.com",
+      passwordHash,
+      rol: "lider",
+      activo: true,
+    },
+    {
+      nombre: "Juan Perez",
+      email: "juan@dds.com",
+      passwordHash,
+      rol: "colaborador",
+      activo: true,
+    },
+    {
+      nombre: "Maria Gomez",
+      email: "maria@dds.com",
+      passwordHash,
+      rol: "colaborador",
+      activo: true,
+    },
+    {
+      nombre: "Pedro Lopez",
+      email: "pedro@dds.com",
+      passwordHash,
+      rol: "colaborador",
+      activo: true,
+    }
+  ]);
+
+  // ==========================================
+  // PROYECTOS
+  // ==========================================
+
+  const proyectos = await Proyecto.bulkCreate([
+    {
+      codigo: "DDS-001",
+      nombre: "Portal Académico",
+      descripcion: "Sistema académico",
+      estado: "activo"
+    },
+    {
+      codigo: "DDS-002",
+      nombre: "API Biblioteca",
+      descripcion: "Sistema biblioteca",
+      estado: "activo"
+    },
+    {
+      codigo: "DDS-003",
+      nombre: "Sistema RRHH",
+      descripcion: "Proyecto pausado",
+      estado: "pausado"
+    },
+    {
+      codigo: "DDS-004",
+      nombre: "Sistema Legacy",
+      descripcion: "Proyecto finalizado",
+      estado: "finalizado"
+    }
+  ]);
+
+  // ==========================================
+  // INTEGRANTES
+  // ==========================================
+
+  await proyectos[0].addUsuarios([
+    usuarios[0],
+    usuarios[1],
+    usuarios[2],
+    usuarios[3]
+  ]);
+
+  await proyectos[1].addUsuarios([
+    usuarios[0],
+    usuarios[1],
+    usuarios[3],
+    usuarios[4]
+  ]);
+
+  await proyectos[2].addUsuarios([
+    usuarios[1],
+    usuarios[2],
+    usuarios[4]
+  ]);
+
+  await proyectos[3].addUsuarios([
+    usuarios[0],
+    usuarios[1]
+  ]);
+
+  // ==========================================
+  // TAREAS
+  // ==========================================
+
+  const tareasCreadas = await Tarea.bulkCreate([
+    {
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[2].id,
+      titulo: "Implementar Login",
+      descripcion: "Crear login JWT",
+      prioridad: "alta",
+      estado: "pendiente",
+      fechaLimite: "2026-06-20"
+    },
+    {
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[3].id,
+      titulo: "Crear Dashboard",
+      descripcion: "Vista principal",
+      prioridad: "media",
+      estado: "en_progreso",
+      fechaLimite: "2026-06-25"
+    },
+    {
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[2].id,
+      titulo: "Configurar Axios",
+      descripcion: "Servicios frontend",
+      prioridad: "baja",
+      estado: "bloqueada",
+      fechaLimite: "2026-06-22"
+    },
+    {
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[3].id,
+      titulo: "CRUD Usuarios",
+      descripcion: "ABM usuarios",
+      prioridad: "alta",
+      estado: "finalizada",
+      fechaLimite: "2026-06-10"
+    },
+    {
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[2].id,
+      titulo: "Refactor Navbar",
+      descripcion: "Mejorar navegación",
+      prioridad: "media",
+      estado: "cancelada",
+      fechaLimite: "2026-06-15"
+    },
+    {
+      proyectoId: proyectos[1].id,
+      responsableId: usuarios[4].id,
+      titulo: "Endpoint Libros",
+      descripcion: "GET libros",
+      prioridad: "alta",
+      estado: "pendiente",
+      fechaLimite: "2026-06-30"
+    },
+    {
+      proyectoId: proyectos[1].id,
+      responsableId: usuarios[3].id,
+      titulo: "Swagger",
+      descripcion: "Documentación API",
+      prioridad: "media",
+      estado: "en_progreso",
+      fechaLimite: "2026-06-28"
+    },
+    {
+      proyectoId: proyectos[1].id,
+      responsableId: usuarios[4].id,
+      titulo: "JWT Biblioteca",
+      descripcion: "Seguridad",
+      prioridad: "critica",
+      estado: "bloqueada",
+      fechaLimite: "2026-06-12"
+    },
+    {
+      proyectoId: proyectos[1].id,
+      responsableId: usuarios[3].id,
+      titulo: "Roles API",
+      descripcion: "Permisos",
+      prioridad: "alta",
+      estado: "finalizada",
+      fechaLimite: "2026-06-08"
+    },
+    {
+      proyectoId: proyectos[1].id,
+      responsableId: usuarios[4].id,
+      titulo: "Dockerización",
+      descripcion: "Deploy",
+      prioridad: "media",
+      estado: "cancelada",
+      fechaLimite: "2026-06-11"
+    },
+    {
+      proyectoId: proyectos[2].id,
+      responsableId: usuarios[2].id,
+      titulo: "RRHH Login",
+      descripcion: "Login empleados",
+      prioridad: "alta",
+      estado: "pendiente",
+      fechaLimite: "2026-06-27"
+    },
+    {
+      proyectoId: proyectos[2].id,
+      responsableId: usuarios[4].id,
+      titulo: "Legajos",
+      descripcion: "CRUD legajos",
+      prioridad: "critica",
+      estado: "en_progreso",
+      fechaLimite: "2026-06-18"
+    },
+    {
+      proyectoId: proyectos[2].id,
+      responsableId: usuarios[2].id,
+      titulo: "Reportes",
+      descripcion: "PDF",
+      prioridad: "media",
+      estado: "bloqueada",
+      fechaLimite: "2026-06-21"
+    },
+    {
+      proyectoId: proyectos[3].id,
+      responsableId: usuarios[0].id,
+      titulo: "Migración",
+      descripcion: "Proyecto legado",
+      prioridad: "alta",
+      estado: "finalizada",
+      fechaLimite: "2026-05-01"
+    },
+    {
+      proyectoId: proyectos[3].id,
+      responsableId: usuarios[1].id,
+      titulo: "Documentación Final",
+      descripcion: "Cerrar proyecto",
+      prioridad: "media",
+      estado: "finalizada",
+      fechaLimite: "2026-05-05"
+    }
+  ]);
+
+  const historialEntries = tareasCreadas.map(t => ({
+    tareaId: t.id,
+    usuarioId: t.responsableId,
+    accion: "Creacion",
+    valorAnterior: null,
+    valorNuevo: JSON.stringify({
+      titulo: t.titulo,
+      descripcion: t.descripcion,
+      prioridad: t.prioridad,
+      estado: t.estado,
+      fechaLimite: t.fechaLimite,
+    }),
+    fechaHora: new Date(),
+  }));
+
+  await HistorialTarea.bulkCreate(historialEntries);
+
+  console.log("Semillas cargadas correctamente");
+}
+
+module.exports = seedDatabase;
+===== ./backend/src/server.js =====
+require("dotenv").config();
+
+const app = require("./app");
+const sequelize = require("./config/database.js");
+
+require("./models");
+
+const seedDatabase = require("./seeds/seed");
+
+const PORT = process.env.PORT || 3000;
+
+async function startServer() {
+  try {
+
+    await sequelize.authenticate();
+    console.log("Base de datos conectada");
+
+    await sequelize.sync();
+    console.log("Modelos sincronizados");
+
+    const { Usuario } = require("./models");
+    const count = await Usuario.count();
+
+    if (count === 0) {
+      console.log("Base de datos vacía, cargando semillas...");
+      await seedDatabase();
+    } else {
+      console.log("Datos existentes encontrados, omitiendo semillas.");
+    }
+
+    const server = app.listen(PORT, () => {
+      console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
+
+    // Fix para Express 5 + Node 24: mantener el event loop activo
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
+
+    process.on("SIGTERM", () => {
+      console.log("Cerrando servidor...");
+      server.close(() => process.exit(0));
+    });
+
+    process.on("SIGINT", () => {
+      console.log("Cerrando servidor...");
+      server.close(() => process.exit(0));
+    });
+
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+}
+
+startServer();
+===== ./backend/src/services/auth.service.js =====
+const bcrypt = require("bcrypt");
+
+const { Usuario } = require("../models");
+
+const AppError = require("../utils/AppError");
+
+const {
+  generateToken,
+} = require("../utils/jwt");
+
+async function register(data) {
+
+  const existente =
+    await Usuario.findOne({
+      where: {
+        email: data.email,
+      },
+    });
+
+  if (existente) {
+    throw new AppError(
+      "El email ya existe",
+      400
+    );
+  }
+
+  const passwordHash =
+    await bcrypt.hash(
+      data.password,
+      10
+    );
+
+  const usuario =
+    await Usuario.create({
+      nombre: data.nombre,
+      email: data.email,
+      passwordHash,
+      rol: "colaborador",
+      activo: true,
+    });
+
+  return usuario;
+}
+
+async function login(
+  email,
+  password
+) {
+
+  const usuario =
+    await Usuario.findOne({
+      where: { email },
+    });
+
+  if (!usuario) {
+    throw new AppError(
+      "Credenciales inválidas",
+      401
+    );
+  }
+
+  const coincide =
+    await bcrypt.compare(
+      password,
+      usuario.passwordHash
+    );
+
+  if (!coincide) {
+    throw new AppError(
+      "Credenciales inválidas",
+      401
+    );
+  }
+
+  const token =
+    generateToken(usuario);
+
+  return {
+    token,
+    usuario: {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      email: usuario.email,
+      rol: usuario.rol,
+    },
+  };
+}
+
+module.exports = {
+  register,
+  login,
+};
+===== ./backend/src/services/historial.service.js =====
+const {
+  HistorialTarea
+} = require("../models");
+
+async function registrarCambio({
+  tareaId,
+  usuarioId,
+  accion,
+  valorAnterior,
+  valorNuevo
+}) {
+
+  return await HistorialTarea.create({
+
+    tareaId,
+
+    usuarioId,
+
+    accion,
+
+    valorAnterior,
+
+    valorNuevo,
+
+    fechaHora: new Date()
+
+  });
+
+}
+
+async function obtenerHistorial(
+  tareaId
+) {
+
+  return await HistorialTarea.findAll({
+
+    where: {
+      tareaId
+    },
+
+    order: [
+      ["fechaHora", "DESC"]
+    ]
+
+  });
+
+}
+
+module.exports = {
+  registrarCambio,
+  obtenerHistorial
+};
+===== ./backend/src/services/proyectos.service.js =====
+const {
+  Proyecto,
+  Usuario,
+  Tarea
+} = require("../models");
+
+const AppError =
+  require("../utils/AppError");
+
+const {
+  canTransition
+} = require(
+  "../utils/proyectoEstados"
+);
+
+async function getEstadisticas(
+  proyectoId
+) {
+
+  const proyecto =
+    await Proyecto.findByPk(
+      proyectoId
+    );
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  const tareas =
+    await Tarea.findAll({
+      where: {
+        proyectoId
+      }
+    });
+
+  return {
+
+    proyectoId:
+      proyecto.id,
+
+    nombre:
+      proyecto.nombre,
+
+    total:
+      tareas.length,
+
+    pendientes:
+      tareas.filter(
+        tarea =>
+          tarea.estado ===
+          "pendiente"
+      ).length,
+
+    enProgreso:
+      tareas.filter(
+        tarea =>
+          tarea.estado ===
+          "en_progreso"
+      ).length,
+
+    bloqueadas:
+      tareas.filter(
+        tarea =>
+          tarea.estado ===
+          "bloqueada"
+      ).length,
+
+    finalizadas:
+      tareas.filter(
+        tarea =>
+          tarea.estado ===
+          "finalizada"
+      ).length,
+
+    canceladas:
+      tareas.filter(
+        tarea =>
+          tarea.estado ===
+          "cancelada"
+      ).length
+
+  };
+
+}
+
+async function cambiarEstado(
+  proyectoId,
+  nuevoEstado
+) {
+
+  const proyecto =
+    await Proyecto.findByPk(
+      proyectoId
+    );
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  if (
+    !canTransition(
+      proyecto.estado,
+      nuevoEstado
+    )
+  ) {
+
+    throw new AppError(
+      `No se puede pasar de ${proyecto.estado} a ${nuevoEstado}`,
+      400
+    );
+
+  }
+
+  proyecto.estado =
+    nuevoEstado;
+
+  await proyecto.save();
+
+  return proyecto;
+
+}
+
+async function getAll() {
+
+  return Proyecto.findAll({
+
+    include: [
+
+      Usuario,
+
+      Tarea
+
+    ]
+
+  });
+
+}
+
+async function getById(id) {
+
+  const proyecto =
+    await Proyecto.findByPk(
+      id,
+      {
+        include: [
+          Usuario,
+          Tarea
+        ]
+      }
+    );
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  return proyecto;
+
+}
+
+async function pausar(
+  proyectoId
+) {
+
+  return cambiarEstado(
+    proyectoId,
+    "pausado"
+  );
+
+}
+
+async function reactivar(
+  proyectoId
+) {
+
+  return cambiarEstado(
+    proyectoId,
+    "activo"
+  );
+
+}
+
+async function finalizar(
+  proyectoId
+) {
+
+  return cambiarEstado(
+    proyectoId,
+    "finalizado"
+  );
+
+}
+
+async function create(data) {
+
+  const proyectoExistente =
+    await Proyecto.findOne({
+      where: {
+        codigo: data.codigo
+      }
+    });
+
+  if (proyectoExistente) {
+
+    throw new AppError(
+      "Ya existe un proyecto con ese código",
+      400
+    );
+
+  }
+
+  const proyecto = await Proyecto.create({
+
+    codigo:
+      data.codigo,
+
+    nombre:
+      data.nombre,
+
+    descripcion:
+      data.descripcion,
+
+    estado:
+      "activo"
+
+  });
+
+  // Si se enviaron integrantes, asociarlos
+  if (
+    Array.isArray(data.integrantes) &&
+    data.integrantes.length > 0
+  ) {
+
+    const usuariosValidos =
+      await Usuario.findAll({
+        where: {
+          id: data.integrantes,
+          activo: true
+        }
+      });
+
+    await proyecto.addUsuarios(usuariosValidos);
+
+  }
+
+  // Retornar con integrantes incluidos
+  return Proyecto.findByPk(proyecto.id, {
+    include: [Usuario, Tarea]
+  });
+
+}
+
+async function update(id, data) {
+
+  const proyecto =
+    await Proyecto.findByPk(id);
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  const proyectoConCodigo =
+    await Proyecto.findOne({
+      where: {
+        codigo: data.codigo
+      }
+    });
+
+  if (
+    proyectoConCodigo &&
+    proyectoConCodigo.id !== proyecto.id
+  ) {
+
+    throw new AppError(
+      "Ya existe un proyecto con ese código",
+      400
+    );
+
+  }
+
+  proyecto.codigo =
+    data.codigo;
+
+  proyecto.nombre =
+    data.nombre;
+
+  proyecto.descripcion =
+    data.descripcion;
+
+  proyecto.estado =
+    data.estado;
+
+  await proyecto.save();
+
+  return proyecto;
+
+}
+
+// Reemplaza TODOS los integrantes del proyecto
+async function setIntegrantes(id, integrantesIds) {
+
+  const proyecto =
+    await Proyecto.findByPk(id);
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  if (!Array.isArray(integrantesIds)) {
+
+    throw new AppError(
+      "integrantes debe ser un array de IDs",
+      400
+    );
+
+  }
+
+  const usuariosValidos =
+    await Usuario.findAll({
+      where: {
+        id: integrantesIds,
+        activo: true
+      }
+    });
+
+  // setUsuarios reemplaza todos los integrantes de una vez
+  await proyecto.setUsuarios(usuariosValidos);
+
+  return Proyecto.findByPk(id, {
+    include: [Usuario, Tarea]
+  });
+
+}
+
+async function remove(id) {
+
+  const proyecto =
+    await Proyecto.findByPk(
+      id,
+      {
+        include: [Tarea]
+      }
+    );
+
+  if (!proyecto) {
+
+    throw new AppError(
+      "Proyecto no encontrado",
+      404
+    );
+
+  }
+
+  if (
+    proyecto.Tareas &&
+    proyecto.Tareas.length > 0
+  ) {
+
+    throw new AppError(
+      "No se puede eliminar un proyecto que tiene tareas asociadas",
+      400
+    );
+
+  }
+
+  await proyecto.destroy();
+
+  return {
+    message:
+      "Proyecto eliminado correctamente"
+  };
+
+}
+
+module.exports = {
+
+  getAll,
+
+  getById,
+
+  create,
+
+  update,
+
+  remove,
+
+  getEstadisticas,
+
+  pausar,
+
+  reactivar,
+
+  finalizar,
+
+  setIntegrantes
+
+};
+
+===== ./backend/src/services/tareas.service.js =====
+const historialService =
+  require("./historial.service");
+
+const {
+  canTransition
+} = require("../utils/estados");
+
+const {
+  Tarea,
+  Proyecto,
+  Usuario
+} = require("../models");
+
+const AppError =
+  require("../utils/AppError");
+
+const { Op, literal } =        // <- mover acá, fuera de la función
+  require("sequelize");
+
+const PRIORIDADES_VALIDAS = ["baja", "media", "alta", "critica"];
+
+async function getAll(filtros = {}) {
+  const where = {};
+  const { proyectoId, responsableId, estado, prioridad, page, limit, sortBy, order, search } = filtros;
+
+  if (proyectoId) where.proyectoId = proyectoId;
+  if (responsableId) where.responsableId = responsableId;
+  if (estado) where.estado = estado;
+  if (prioridad) where.prioridad = prioridad;
+  if (search) {
+    where.titulo = { [Op.like]: `%${search}%` };
+  }
+
+  const camposOrdenables = ["id", "titulo", "prioridad", "estado", "fechaLimite", "createdAt"];
+  const orden = [];
+
+  if (sortBy && camposOrdenables.includes(sortBy)) {
+    if (sortBy === "prioridad") {
+      const dir = order === "DESC" ? "DESC" : "ASC";
+      orden.push([
+        literal(`CASE prioridad
+          WHEN 'baja'    THEN 1
+          WHEN 'media'   THEN 2
+          WHEN 'alta'    THEN 3
+          WHEN 'critica' THEN 4
+          END`),
+        dir
+      ]);
+    } else {
+      orden.push([sortBy, order === "DESC" ? "DESC" : "ASC"]);
+    }
+  }
+
+  const pageNum = parseInt(page) || 1;
+  const limitNum = parseInt(limit) || 10;
+  const offset = (pageNum - 1) * limitNum;
+
+  const { count, rows } = await Tarea.findAndCountAll({
+    where,
+    include: [
+      { model: Proyecto },
+      { model: Usuario, as: "responsable" }
+    ],
+    order: orden.length ? orden : [["createdAt", "DESC"]],
+    offset,
+    limit: limitNum,
+  });
+
+  return {
+    data: rows,
+    total: count,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(count / limitNum),
+  };
+}
+
+async function cambiarEstado(tareaId, nuevoEstado, usuarioId) {
+
+  const tarea = await Tarea.findByPk(tareaId);
+
+  if (!tarea) {
+    throw new AppError("Tarea no encontrada", 404);
+  }
+
+  const estadoAnterior = tarea.estado;
+
+  if (!canTransition(estadoAnterior, nuevoEstado)) {
+    throw new AppError(
+      `No se puede pasar de ${estadoAnterior} a ${nuevoEstado}`,
+      400
+    );
+  }
+
+  tarea.estado = nuevoEstado;
+  await tarea.save();
+
+  await historialService.registrarCambio({
+    tareaId: tarea.id,
+    usuarioId,
+    accion: "CAMBIO_ESTADO",
+    valorAnterior: estadoAnterior,
+    valorNuevo: nuevoEstado
+  });
+
+  return tarea;
+}
+
+async function iniciar(tareaId, usuarioId) {
+  return cambiarEstado(tareaId, "en_progreso", usuarioId);
+}
+
+async function bloquear(tareaId, usuarioId) {
+  return cambiarEstado(tareaId, "bloqueada", usuarioId);
+}
+
+async function finalizar(tareaId, usuarioId) {
+  return cambiarEstado(tareaId, "finalizada", usuarioId);
+}
+
+async function cancelar(tareaId, usuarioId) {
+  return cambiarEstado(tareaId, "cancelada", usuarioId);
+}
+
+async function getHistorial(tareaId) {
+  return historialService.obtenerHistorial(tareaId);
+}
+
+async function update(id, data, usuarioId) {
+  const tarea = await Tarea.findByPk(id, {
+    include: [{ model: Proyecto }]
+  });
+
+  if (!tarea) {
+    throw new AppError("Tarea no encontrada", 404);
+  }
+
+  if (tarea.estado === "finalizada" || tarea.estado === "cancelada") {
+    throw new AppError("No se puede editar una tarea finalizada o cancelada", 400);
+  }
+
+  if (tarea.Proyecto && tarea.Proyecto.estado === "finalizado") {
+    throw new AppError("No se puede editar tareas de un proyecto finalizado", 400);
+  }
+
+  if (!PRIORIDADES_VALIDAS.includes(data.prioridad)) {
+    throw new AppError("Prioridad inválida. Valores permitidos: baja, media, alta, critica", 400);
+  }
+
+  const anterior = {
+    titulo: tarea.titulo,
+    descripcion: tarea.descripcion,
+    prioridad: tarea.prioridad,
+    fechaLimite: tarea.fechaLimite,
+  };
+
+  const cambios = {};
+  let huboReasignacion = false;
+
+  if (data.titulo !== undefined) cambios.titulo = data.titulo;
+  if (data.descripcion !== undefined) cambios.descripcion = data.descripcion;
+  if (data.prioridad !== undefined) cambios.prioridad = data.prioridad;
+  if (data.fechaLimite !== undefined) cambios.fechaLimite = data.fechaLimite;
+
+  if (data.responsableId !== undefined && data.responsableId !== tarea.responsableId) {
+    const proyecto = tarea.Proyecto || await Proyecto.findByPk(tarea.proyectoId);
+    const integrantes = await proyecto.getUsuarios();
+    const pertenece = integrantes.some(u => u.id === Number(data.responsableId));
+    if (!pertenece) {
+      throw new AppError("El responsable no pertenece al proyecto", 400);
+    }
+    cambios.responsableId = data.responsableId;
+    huboReasignacion = true;
+  }
+
+  await tarea.update(cambios);
+
+  await historialService.registrarCambio({
+    tareaId: tarea.id,
+    usuarioId,
+    accion: huboReasignacion ? "Reasignacion" : "MODIFICACION",
+    valorAnterior: JSON.stringify(anterior),
+    valorNuevo: JSON.stringify(cambios),
+  });
+
+  return tarea;
+}
+
+async function getById(id) {
+
+  const tarea = await Tarea.findByPk(id, {
+    include: [
+      { model: Proyecto },
+      { model: Usuario, as: "responsable" }
+    ]
+  });
+
+  if (!tarea) {
+    throw new AppError("Tarea no encontrada", 404);
+  }
+
+  return tarea;
+}
+
+async function create(data) {
+
+  if (!PRIORIDADES_VALIDAS.includes(data.prioridad)) {
+    throw new AppError("Prioridad inválida. Valores permitidos: baja, media, alta, critica", 400);
+  }
+
+  const proyecto = await Proyecto.findByPk(data.proyectoId, {
+    include: Usuario
+  });
+
+  if (!proyecto) {
+    throw new AppError("Proyecto inexistente", 400);
+  }
+
+  if (proyecto.estado === "pausado") {
+    throw new AppError("No se pueden crear tareas en proyectos pausados", 400);
+  }
+
+  if (proyecto.estado === "finalizado") {
+    throw new AppError("No se pueden crear tareas en proyectos finalizados", 400);
+  }
+
+  const responsable = await Usuario.findByPk(data.responsableId);
+
+  if (!responsable) {
+    throw new AppError("Responsable inexistente", 400);
+  }
+
+  const integrantes = await proyecto.getUsuarios();
+  const pertenece = integrantes.some(usuario => usuario.id === responsable.id);
+
+  if (!pertenece) {
+    throw new AppError("El responsable no pertenece al proyecto", 400);
+  }
+
+  const tarea = await Tarea.create({
+    titulo: data.titulo,
+    descripcion: data.descripcion,
+    prioridad: data.prioridad,
+    fechaLimite: data.fechaLimite,
+    proyectoId: data.proyectoId,
+    responsableId: data.responsableId,
+    estado: "pendiente"
+  });
+
+  await historialService.registrarCambio({
+    tareaId: tarea.id,
+    usuarioId: tarea.responsableId,
+    accion: "Creacion",
+    valorAnterior: null,
+    valorNuevo: JSON.stringify({
+      titulo: tarea.titulo,
+      descripcion: tarea.descripcion,
+      prioridad: tarea.prioridad,
+      estado: tarea.estado,
+      fechaLimite: tarea.fechaLimite,
+    }),
+  });
+
+  return tarea;
+}
+
+module.exports = {
+  getAll,
+  getById,
+  create,
+  update,
+  iniciar,
+  bloquear,
+  finalizar,
+  cancelar,
+  getHistorial
+};
+===== ./backend/src/services/usuarios.service.js =====
+const { Usuario } =
+  require("../models");
+
+const AppError =
+  require("../utils/AppError");
+
+async function getAll() {
+
+  return Usuario.findAll({
+
+    attributes: [
+      "id",
+      "nombre",
+      "email",
+      "rol",
+      "activo"
+    ]
+
+  });
+
+}
+
+async function getById(id) {
+
+  const usuario =
+    await Usuario.findByPk(
+      id,
+      {
+        attributes: [
+          "id",
+          "nombre",
+          "email",
+          "rol",
+          "activo"
+        ]
+      }
+    );
+
+  if (!usuario) {
+
+    throw new AppError(
+      "Usuario no encontrado",
+      404
+    );
+
+  }
+
+  return usuario;
+
+}
+
+async function getActivos() {
+
+  return Usuario.findAll({
+
+    where: {
+      activo: true
+    },
+
+    attributes: [
+      "id",
+      "nombre"
+    ]
+
+  });
+
+}
+
+module.exports = {
+
+  getAll,
+
+  getById,
+
+  getActivos
+
+};
+===== ./backend/src/tests/auth.test.js =====
+const { app, request, seedTestData, sequelize } = require("./setup");
+
+beforeAll(async () => {
+  await sequelize.sync({ force: true });
+});
+
+beforeEach(async () => {
+  await seedTestData();
+});
+
+afterAll(async () => {
+  await sequelize.close();
+});
+
+describe("Auth", () => {
+
+  test("POST /api/auth/login correcto devuelve token y usuario", async () => {
+    const res = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "admin@test.com", password: "123456" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeDefined();
+    expect(res.body.usuario.email).toBe("admin@test.com");
+  });
+
+  test("POST /api/auth/login inválido devuelve 401", async () => {
+    const res = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "admin@test.com", password: "wrong" });
+
+    expect(res.status).toBe(401);
+  });
+
+});
+
+===== ./backend/src/tests/helpers.js =====
+const bcrypt = require("bcrypt");
+const {
+  Usuario,
+  Proyecto,
+  Tarea,
+  HistorialTarea
+} = require("../models");
+
+async function seedTestData() {
+  await HistorialTarea.destroy({ where: {}, force: true });
+  await Tarea.destroy({ where: {}, force: true });
+  await Proyecto.destroy({ where: {}, force: true });
+  await Usuario.destroy({ where: {}, force: true });
+
+  const hash = await bcrypt.hash("123456", 10);
+
+  const usuarios = await Usuario.bulkCreate([
+    { nombre: "Admin Test", email: "admin@test.com", passwordHash: hash, rol: "admin", activo: true },
+    { nombre: "Lider Test", email: "lider@test.com", passwordHash: hash, rol: "lider", activo: true },
+    { nombre: "Colab Test", email: "colab@test.com", passwordHash: hash, rol: "colaborador", activo: true },
+    { nombre: "Externo Test", email: "externo@test.com", passwordHash: hash, rol: "colaborador", activo: true }
+  ]);
+
+  const proyectos = await Proyecto.bulkCreate([
+    { codigo: "TEST-001", nombre: "Test Activo", descripcion: "Proyecto activo", estado: "activo" },
+    { codigo: "TEST-002", nombre: "Test Pausado", descripcion: "Proyecto pausado", estado: "pausado" },
+    { codigo: "TEST-003", nombre: "Test Finalizado", descripcion: "Proyecto finalizado", estado: "finalizado" }
+  ]);
+
+  await proyectos[0].addUsuarios([usuarios[0], usuarios[1], usuarios[2]]);
+  await proyectos[1].addUsuarios([usuarios[0], usuarios[1]]);
+  await proyectos[2].addUsuarios([usuarios[0]]);
+
+  const tareas = await Tarea.bulkCreate([
+    { proyectoId: proyectos[0].id, responsableId: usuarios[2].id, titulo: "Tarea 1", descripcion: "Desc 1", prioridad: "alta", estado: "pendiente", fechaLimite: "2026-07-01" },
+    { proyectoId: proyectos[0].id, responsableId: usuarios[2].id, titulo: "Tarea 2", descripcion: "Desc 2", prioridad: "media", estado: "en_progreso", fechaLimite: "2026-07-15" },
+    { proyectoId: proyectos[0].id, responsableId: usuarios[1].id, titulo: "Tarea 3", descripcion: "Desc 3", prioridad: "critica", estado: "finalizada", fechaLimite: "2026-06-01" }
+  ]);
+
+  return { usuarios, proyectos, tareas };
+}
+
+function getToken(usuario) {
+  const { generateToken } = require("../utils/jwt");
+  return generateToken(usuario);
+}
+
+module.exports = { seedTestData, getToken };
+
+===== ./backend/src/tests/setup.js =====
+process.env.NODE_ENV = "test";
+
+const app = require("../app");
+const request = require("supertest");
+const sequelize = require("../config/database");
+const { seedTestData } = require("./helpers");
+
+module.exports = { app, request, seedTestData, sequelize };
+
+===== ./backend/src/tests/tareas.test.js =====
+const { app, request, seedTestData, sequelize } = require("./setup");
+const { getToken } = require("./helpers");
+
+let usuarios, proyectos, tareas, tokenAdmin, tokenColab;
+
+beforeAll(async () => {
+  await sequelize.sync({ force: true });
+});
+
+beforeEach(async () => {
+  const data = await seedTestData();
+  usuarios = data.usuarios;
+  proyectos = data.proyectos;
+  tareas = data.tareas;
+  tokenAdmin = getToken(usuarios[0]);
+  tokenColab = getToken(usuarios[2]);
+});
+
+afterAll(async () => {
+  await sequelize.close();
+});
+
+describe("GET /api/tareas", () => {
+
+  test("listar tareas sin filtros", async () => {
+    const res = await request(app)
+      .get("/api/tareas")
+      .set("Authorization", `Bearer ${tokenAdmin}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(3);
+  });
+
+  test("listar tareas con filtro por estado", async () => {
+    const res = await request(app)
+      .get("/api/tareas?estado=pendiente")
+      .set("Authorization", `Bearer ${tokenAdmin}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(1);
+  });
+
+});
+
+describe("GET /api/tareas/:id", () => {
+
+  test("detalle de tarea existente", async () => {
+    const res = await request(app)
+      .get(`/api/tareas/${tareas[0].id}`)
+      .set("Authorization", `Bearer ${tokenAdmin}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.titulo).toBe("Tarea 1");
+  });
+
+  test("detalle de tarea inexistente devuelve 404", async () => {
+    const res = await request(app)
+      .get("/api/tareas/99999")
+      .set("Authorization", `Bearer ${tokenAdmin}`);
+
+    expect(res.status).toBe(404);
+  });
+
+});
+
+describe("POST /api/tareas", () => {
+
+  const tareaValida = {
+    titulo: "Nueva Tarea",
+    descripcion: "Descripción",
+    proyectoId: null,
+    responsableId: null,
+    prioridad: "alta",
+    fechaLimite: "2026-08-01"
+  };
+
+  test("creación válida", async () => {
+    const body = {
+      ...tareaValida,
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[2].id
+    };
+    const res = await request(app)
+      .post("/api/tareas")
+      .set("Authorization", `Bearer ${tokenAdmin}`)
+      .send(body);
+
+    expect(res.status).toBe(201);
+  });
+
+  test("creación inválida por responsable fuera del proyecto", async () => {
+    const body = {
+      ...tareaValida,
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[3].id
+    };
+    const res = await request(app)
+      .post("/api/tareas")
+      .set("Authorization", `Bearer ${tokenAdmin}`)
+      .send(body);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("no pertenece");
+  });
+
+  test("creación inválida por prioridad no permitida", async () => {
+    const body = {
+      ...tareaValida,
+      proyectoId: proyectos[0].id,
+      responsableId: usuarios[2].id,
+      prioridad: "superalta"
+    };
+    const res = await request(app)
+      .post("/api/tareas")
+      .set("Authorization", `Bearer ${tokenAdmin}`)
+      .send(body);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("Prioridad");
+  });
+
+  test("creación inválida sobre proyecto finalizado", async () => {
+    const body = {
+      ...tareaValida,
+      proyectoId: proyectos[2].id,
+      responsableId: usuarios[0].id
+    };
+    const res = await request(app)
+      .post("/api/tareas")
+      .set("Authorization", `Bearer ${tokenAdmin}`)
+      .send(body);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("finalizado");
+  });
+
+  test("creación inválida sobre proyecto pausado", async () => {
+    const body = {
+      ...tareaValida,
+      proyectoId: proyectos[1].id,
+      responsableId: usuarios[0].id
+    };
+    const res = await request(app)
+      .post("/api/tareas")
+      .set("Authorization", `Bearer ${tokenAdmin}`)
+      .send(body);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("pausado");
+  });
+
+});
+
+describe("Autorización", () => {
+
+  test("acceso sin JWT devuelve 401", async () => {
+    const res = await request(app)
+      .get("/api/tareas");
+
+    expect(res.status).toBe(401);
+  });
+
+  test("colaborador no puede finalizar tarea (403)", async () => {
+    const res = await request(app)
+      .patch(`/api/tareas/${tareas[0].id}/finalizar`)
+      .set("Authorization", `Bearer ${tokenColab}`);
+
+    expect(res.status).toBe(403);
+  });
+
+});
+
+describe("Transiciones de estado", () => {
+
+  test("transición no permitida: finalizada -> pendiente", async () => {
+    const res = await request(app)
+      .patch(`/api/tareas/${tareas[2].id}/iniciar`)
+      .set("Authorization", `Bearer ${tokenAdmin}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("No se puede pasar");
+  });
+
+});
+
+===== ./backend/src/utils/AppError.js =====
+class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+
+    this.statusCode = statusCode;
+  }
+}
+
+module.exports = AppError;
+===== ./backend/src/utils/estados.js =====
+const transitions = {
+
+  pendiente: [
+    "en_progreso",
+    "cancelada"
+  ],
+
+  en_progreso: [
+    "bloqueada",
+    "finalizada",
+    "cancelada"
+  ],
+
+  bloqueada: [
+    "en_progreso",
+    "cancelada"
+  ],
+
+  finalizada: [],
+
+  cancelada: []
+};
+
+function canTransition(
+  currentState,
+  newState
+) {
+
+  return (
+    transitions[currentState]
+      ?.includes(newState)
+  );
+}
+
+module.exports = {
+  transitions,
+  canTransition
+};
+===== ./backend/src/utils/jwt.js =====
+const jwt = require("jsonwebtoken");
+const jwtConfig = require("../config/jwt");
+
+function generateToken(usuario) {
+  return jwt.sign(
+    {
+      id: usuario.id,
+      email: usuario.email,
+      rol: usuario.rol,
+    },
+    jwtConfig.secret,
+    {
+      expiresIn: jwtConfig.expiresIn,
+    }
+  );
+}
+
+function verifyToken(token) {
+  return jwt.verify(
+    token,
+    jwtConfig.secret
+  );
+}
+
+module.exports = {
+  generateToken,
+  verifyToken,
+};
+===== ./backend/src/utils/proyectoEstados.js =====
+function canTransition(
+  actual,
+  nuevo
+) {
+
+  const transitions = {
+
+    activo: [
+      "pausado",
+      "finalizado"
+    ],
+
+    pausado: [
+      "activo",
+      "finalizado"
+    ],
+
+    finalizado: []
+
+  };
+
+  return transitions[actual]
+    ?.includes(nuevo);
+
+}
+
+module.exports = {
+  canTransition
+};
+===== ./backend/src/validators/validateTarea.middleware.js =====
+const AppError =
+  require("../utils/AppError");
+
+const PRIORIDADES_VALIDAS = [
+  "baja",
+  "media",
+  "alta",
+  "critica"
+];
+
+const ESTADOS_VALIDOS = [
+  "pendiente",
+  "en_progreso",
+  "bloqueada",
+  "finalizada",
+  "cancelada"
+];
+
+function validateCreateTarea(
+  req,
+  res,
+  next
+) {
+
+  const {
+    titulo,
+    descripcion,
+    proyectoId,
+    responsableId,
+    prioridad,
+    fechaLimite
+  } = req.body;
+
+  const errores = [];
+
+  if (!titulo || typeof titulo !== "string") {
+    errores.push("El campo titulo es obligatorio");
+  }
+
+  if (!descripcion || typeof descripcion !== "string") {
+    errores.push("El campo descripcion es obligatorio");
+  }
+
+  if (!proyectoId) {
+    errores.push("El campo proyectoId es obligatorio");
+  }
+
+  if (!responsableId) {
+    errores.push("El campo responsableId es obligatorio");
+  }
+
+  if (!prioridad) {
+    errores.push("El campo prioridad es obligatorio");
+  } else if (
+    !PRIORIDADES_VALIDAS.includes(
+      prioridad
+    )
+  ) {
+    errores.push(
+      "Prioridad inválida. Valores permitidos: baja, media, alta, critica"
+    );
+  }
+
+  if (!fechaLimite) {
+    errores.push("El campo fechaLimite es obligatorio");
+  }
+
+  if (errores.length > 0) {
+    return res.status(400).json({
+      error: errores.join(". ")
+    });
+  }
+
+  next();
+
+}
+
+function validateUpdateTarea(
+  req,
+  res,
+  next
+) {
+
+  const {
+    titulo,
+    descripcion,
+    prioridad,
+    fechaLimite
+  } = req.body;
+
+  const errores = [];
+
+  if (
+    titulo !== undefined &&
+    typeof titulo !== "string"
+  ) {
+    errores.push("El campo titulo debe ser un texto");
+  }
+
+  if (
+    descripcion !== undefined &&
+    typeof descripcion !== "string"
+  ) {
+    errores.push("El campo descripcion debe ser un texto");
+  }
+
+  if (
+    prioridad !== undefined &&
+    !PRIORIDADES_VALIDAS.includes(
+      prioridad
+    )
+  ) {
+    errores.push(
+      "Prioridad inválida. Valores permitidos: baja, media, alta, critica"
+    );
+  }
+
+  if (
+    fechaLimite !== undefined &&
+    isNaN(
+      Date.parse(
+        fechaLimite
+      )
+    )
+  ) {
+    errores.push("El campo fechaLimite debe ser una fecha válida");
+  }
+
+  if (errores.length > 0) {
+    return res.status(400).json({
+      error: errores.join(". ")
+    });
+  }
+
+  next();
+
+}
+
+module.exports = {
+  validateCreateTarea,
+  validateUpdateTarea
+};
